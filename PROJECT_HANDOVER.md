@@ -33,10 +33,21 @@ This phase established the foundational RAG intelligence using a text-based chat
 | 8 | Commit all changes to Git repository. | [x] |
 | 9 | Test and verify RAG functionality. | [x] |
 
-## 4. Next Steps (Phase 2: Voice and Data Ingestion)
+## 4. Phase 2: Persistent Knowledge Base & Ingestion (In Progress)
+
+| Step | Description | Status |
+| :--- | :--- | :--- |
+| 1 | Select and configure persistent vector database (Supabase/pgvector). | [x] |
+| 2 | Install dependencies (`@supabase/supabase-js`, `langchain`). | [x] |
+| 3 | Create Supabase client (`lib/supabase.ts`) and `documents` table schema. | [x] |
+| 4 | Design data ingestion API route (`app/api/ingest/route.ts`). | [-] |
+| 5 | Implement document parsing and text chunking logic. | [ ] |
+| 6 | Implement embedding and vector storage logic. | [ ] |
+| 7 | Update `lib/rag.ts` for persistent retrieval. | [ ] |
+| 8 | Implement frontend UI for document upload. | [ ] |
+
+## 5. Next Steps (Future Phases)
 
 The next agent taking over should focus on these priorities:
 
-1.  **Implement Persistent Knowledge Base:** Replace the simulated in-memory RAG with a system that handles user-uploaded documents (e.g., using a dedicated vector database like ChromaDB or Pinecone, or Google's Vertex AI Vector Search).
-2.  **Build Ingestion Pipeline:** Create an API route and logic to accept user-uploaded files, chunk them, embed them, and store them in the persistent vector store.
-3.  **Voice Integration:** Begin integrating real-time voice capabilities (Speech-to-Text and Text-to-Speech) to fulfill the Retell AI-like voice agent goal.
+1.  **Voice Integration:** Begin integrating real-time voice capabilities (Speech-to-Text and Text-to-Speech) to fulfill the Retell AI-like voice agent goal.
