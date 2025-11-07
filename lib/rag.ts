@@ -1,5 +1,5 @@
-import { ai, EMBEDDING_MODEL } from "./gemini";
-import { supabase, DOCUMENTS_TABLE } from "./supabase";
+import { ai, EMBEDDING_MODEL } from "./gemini.ts";
+import { supabase, DOCUMENTS_TABLE } from "./supabase.ts";
 
 /**
  * Embeds a single text string using the Gemini embedding model.

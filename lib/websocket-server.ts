@@ -2,10 +2,10 @@ import { WebSocket, WebSocketServer } from "ws";
 import { IncomingMessage } from "http";
 import { Socket } from "net";
 import { Writable } from "stream";
-import { createSttStream } from "./stt";
-import { retrieveContext } from "./rag";
-import { ai, CHAT_MODEL } from "./gemini";
-import { synthesizeSpeechStream } from "./tts";
+import { createSttStream } from "./stt.ts";
+import { retrieveContext } from "./rag.ts";
+import { ai, CHAT_MODEL } from "./gemini.ts";
+import { synthesizeSpeechStream } from "./tts.ts";
 
 // Global variable to hold the WebSocket server instance
 // This is a common pattern in Next.js development environments to ensure
@@ -100,7 +100,7 @@ function handleConnection(ws: WebSocket) {
         console.log("Starting STT stream...");
         
         // Initialize STT stream
-        sttStream = createSttStream((text, isFinal) => {
+        sttStream = createSttStream((text: string, isFinal: boolean) => {
           // Send interim results back to the client for display
           if (!isFinal) {
             ws.send(JSON.stringify({ type: "interim_text", text: text }));

@@ -67,8 +67,8 @@ This phase established the foundational RAG intelligence using a text-based chat
 | 4 | Integrate STT output with the existing RAG system (`lib/rag.ts`). | [x] |
 | 5 | Implement Text-to-Speech (TTS) logic to convert the RAG response to audio. | [x] |
 | 6 | Update the frontend chat interface to include microphone input and audio playback. | [x] |
-| 7 | Test and verify real-time voice interaction. | [ ] |
-| 8 | Commit Phase 3 progress to Git repository. | [-] |
+| 7 | Test and verify real-time voice interaction. | [-] |
+| 8 | Commit Phase 3 progress to Git repository. | [x] |
 
 ## 7. Next Steps (Future Phases)
 
@@ -90,6 +90,36 @@ The next agent taking over should focus on these priorities:
 1.  **Voice Integration:** Continue integrating real-time voice capabilities (Speech-to-Text and Text-to-Speech) to fulfill the Retell AI-like voice agent goal.
 
 ## 8. Phase 3: Voice Integration - Custom Server Requirement
+
+### Issues Encountered and New Architectural Plan
+
+The current custom server setup (`server.js` run via `ts-node`) caused significant development friction:
+1.  **HMR Instability:** Frequent server restarts and state loss due to conflicts with Next.js Hot Module Replacement (HMR).
+2.  **Performance Degradation:** Slow page loading due to the overhead of running the entire Next.js app inside a custom `ts-node` process.
+3.  **Voice Bug:** Initial testing showed the client-side audio streaming logic in `components/chat-interface.tsx` is failing to send/process audio correctly.
+
+**New Architectural Plan: Decoupled WebSocket Server**
+
+To resolve stability and performance issues, the WebSocket server will be decoupled from the Next.js development server.
+
+*   **Next.js:** Runs normally via `next dev` (Port 3000).
+*   **WebSocket Server:** Runs as a dedicated, standalone Node.js process (`ws-server.ts`) on a separate port (e.g., 3001).
+*   **Client:** `components/chat-interface.tsx` will be updated to connect to the new WebSocket port (3001).
+
+This requires:
+1.  Deleting `server.js` and updating `package.json` scripts.
+2.  Creating `ws-server.ts` based on `lib/websocket-server.ts` logic.
+3.  Installing `concurrently` to run both servers during development.
+
+## 9. Phase 4: Decoupling and Debugging (New Phase)
+| Step | Description | Status |
+| :--- | :--- | :--- |
+| 1 | Delete `server.js` and update `package.json` scripts to use standard `next dev`. | [ ] |
+| 2 | Create a dedicated WebSocket server file (`ws-server.ts`) running on a separate port (e.g., 3001). | [ ] |
+| 3 | Update `package.json` to use `concurrently` to run Next.js and `ws-server.ts`. | [ ] |
+| 4 | Update `components/chat-interface.tsx` to connect to the new WebSocket port (3001). | [ ] |
+| 5 | Debug and fix the client-side audio streaming/conversion logic. | [ ] |
+| 6 | Ingest UCL data and verify real-time voice interaction. | [ ] |
 
 The implementation of the real-time voice agent relies on WebSockets for bidirectional audio streaming. Due to limitations in the Next.js App Router, a custom Node.js server file (e.g., `server.js`) is required to wrap the Next.js application and handle the WebSocket upgrade event on the `/api/voice` path.
 
