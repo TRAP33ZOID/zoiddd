@@ -16,8 +16,18 @@ These rules must be followed by any subsequent AI agent working on this project:
 *   **Browser Interaction:** NEVER use the `browser_action` tool. Instead, ask the user to perform tests (e.g., visiting a URL, typing, clicking) and wait for their detailed report/screenshot.
 *   **Version Control:** Commit changes to Git frequently to ensure rollback capability.
 *   **Documentation:** Maintain this `PROJECT_HANDOVER.md` file to detail progress and context.
+*   **Mode Switching:** Always switch to the appropriate mode (e.g., `code` for implementation, `architect` for planning) before starting a new major task.
 
-## 3. Phase 1: Core RAG Chat Implementation (Completed)
+## 3. System Instruction for Chat API
+
+This is the exact system instruction used in `app/api/chat/route.ts` to govern the AI's behavior:
+```
+You are Zoid AI Support Agent, a helpful and friendly customer service representative for the MENA region.
+Your goal is to answer the user's question based ONLY on the provided context.
+If the context does not contain the answer, you MUST politely state that you do not have the information and cannot assist with that specific query. DO NOT mention the context, the knowledge base, or your limitations.
+```
+
+## 4. Phase 1: Core RAG Chat Implementation (Completed)
 
 This phase established the foundational RAG intelligence using a text-based chat interface.
 
@@ -33,21 +43,48 @@ This phase established the foundational RAG intelligence using a text-based chat
 | 8 | Commit all changes to Git repository. | [x] |
 | 9 | Test and verify RAG functionality. | [x] |
 
-## 4. Phase 2: Persistent Knowledge Base & Ingestion (In Progress)
+## 5. Phase 2: Persistent Knowledge Base & Ingestion (Completed)
 
 | Step | Description | Status |
 | :--- | :--- | :--- |
 | 1 | Select and configure persistent vector database (Supabase/pgvector). | [x] |
 | 2 | Install dependencies (`@supabase/supabase-js`, `langchain`). | [x] |
 | 3 | Create Supabase client (`lib/supabase.ts`) and `documents` table schema. | [x] |
-| 4 | Design data ingestion API route (`app/api/ingest/route.ts`). | [-] |
-| 5 | Implement document parsing and text chunking logic. | [ ] |
-| 6 | Implement embedding and vector storage logic. | [ ] |
-| 7 | Update `lib/rag.ts` for persistent retrieval. | [ ] |
-| 8 | Implement frontend UI for document upload. | [ ] |
+| 4 | Design data ingestion API route (`app/api/ingest/route.ts`). | [x] |
+| 5 | Implement document parsing and text chunking logic. | [x] |
+| 6 | Implement embedding and vector storage logic. | [x] |
+| 7 | Update `lib/rag.ts` for persistent retrieval. | [x] |
+| 8 | Implement frontend UI for document upload. | [x] |
+| 9 | Test and verify ingestion/retrieval security fix. | [x] |
 
-## 5. Next Steps (Future Phases)
+## 6. Phase 3: Voice Integration (In Progress)
+
+| Step | Description | Status |
+| :--- | :--- | :--- |
+| 1 | Select and install STT/TTS SDKs (Google Cloud Speech/Text-to-Speech). | [x] |
+| 2 | Design the real-time voice API route (`/api/voice`). | [ ] |
+| 3 | Implement Speech-to-Text (STT) logic to convert user audio to text. | [ ] |
+| 4 | Integrate STT output with the existing RAG system (`lib/rag.ts`). | [ ] |
+| 5 | Implement Text-to-Speech (TTS) logic to convert the RAG response to audio. | [ ] |
+| 6 | Update the frontend chat interface to include microphone input and audio playback. | [ ] |
+| 7 | Test and verify real-time voice interaction. | [ ] |
+| 8 | Commit Phase 3 progress to Git repository. | [ ] |
+
+## 7. Next Steps (Future Phases)
+
+### Current Handover Context
+The last prompt used to initiate the current phase (Phase 2) was:
+```
+I am continuing the AI Support Agent project. Please read the contents of the PROJECT_HANDOVER.md file.
+
+Based on the file, please provide:
+1. A summary of the completed work.
+2. The three prioritized next steps listed in the document.
+3. Confirmation that you understand the rule regarding browser interaction.
+
+Then, switch to Architect mode to begin planning the next steps.
+```
 
 The next agent taking over should focus on these priorities:
 
-1.  **Voice Integration:** Begin integrating real-time voice capabilities (Speech-to-Text and Text-to-Speech) to fulfill the Retell AI-like voice agent goal.
+1.  **Voice Integration:** Continue integrating real-time voice capabilities (Speech-to-Text and Text-to-Speech) to fulfill the Retell AI-like voice agent goal.

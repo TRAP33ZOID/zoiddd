@@ -1,5 +1,6 @@
 import { AppSidebar } from "@/components/app-sidebar"
 import { ChatInterface } from "@/components/chat-interface"
+import { IngestionForm } from "@/components/ingestion-form"
 import {
   SidebarInset,
   SidebarProvider,
@@ -17,7 +18,8 @@ export default function Page() {
     >
       <AppSidebar variant="inset" />
       <SidebarInset>
-        <div className="flex flex-1 flex-col items-center justify-center p-4">
+        <div className="flex flex-1 flex-col items-center p-4 overflow-y-auto">
+          <IngestionForm />
           <ChatInterface />
         </div>
       </SidebarInset>

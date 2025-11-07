@@ -1,19 +1,5 @@
 import { ai, EMBEDDING_MODEL } from "./gemini";
-
-// 1. Simulated Knowledge Base (KB)
-// In a real application, this data would be loaded from user-uploaded files (PDFs, docs, etc.)
-// and chunked into smaller, manageable pieces.
-const KNOWLEDGE_BASE_CHUNKS = [
-  "Our product, Zoid, is a cutting-edge data visualization platform.",
-  "To reset your password, navigate to the 'Settings' page and click 'Change Password'.",
-  "Zoid's premium subscription includes unlimited data storage and priority support.",
-  "The free tier of Zoid is limited to 5 projects and 1GB of storage.",
-  "For technical support, please call 1-800-ZOID-HELP or use the in-app chat feature.",
-];
-
-// 2. In-Memory Vector Store Simulation
-// This array will hold the embeddings for the knowledge base chunks.
-let knowledgeBaseVectors: number[][] = [];
+import { supabase, DOCUMENTS_TABLE } from "./supabase";
 
 /**
  * Embeds a single text string using the Gemini embedding model.
@@ -34,56 +20,70 @@ async function embedText(text: string): Promise<number[]> {
 }
 
 /**
- * Calculates the cosine similarity between two vectors.
- * @param vecA First vector.
- * @param vecB Second vector.
- * @returns The cosine similarity score (0 to 1).
- */
-function cosineSimilarity(vecA: number[], vecB: number[]): number {
-  const dotProduct = vecA.reduce((sum, a, i) => sum + a * vecB[i], 0);
-  const magnitudeA = Math.sqrt(vecA.reduce((sum, a) => sum + a * a, 0));
-  const magnitudeB = Math.sqrt(vecB.reduce((sum, b) => sum + b * b, 0));
-  return dotProduct / (magnitudeA * magnitudeB);
-}
-
-/**
- * Initializes the RAG system by embedding all knowledge base chunks.
- * This should be run once on application startup.
- */
-export async function initializeRAG(): Promise<void> {
-  console.log("Initializing RAG system...");
-  const embeddingPromises = KNOWLEDGE_BASE_CHUNKS.map(chunk => embedText(chunk));
-  knowledgeBaseVectors = await Promise.all(embeddingPromises);
-  console.log(`RAG system initialized with ${knowledgeBaseVectors.length} vectors.`);
-}
-
-/**
  * Performs retrieval-augmented generation (RAG) by finding relevant context
- * for a given user query.
+ * for a given user query using Supabase vector search.
  * @param query The user's question.
  * @param k The number of top relevant chunks to retrieve.
  * @returns An array of relevant text chunks.
  */
 export async function retrieveContext(query: string, k: number = 2): Promise<string[]> {
-  if (knowledgeBaseVectors.length === 0) {
-    await initializeRAG();
-  }
-
   // 1. Embed the user query
   const queryVector = await embedText(query);
 
-  // 2. Calculate similarity between the query and all KB vectors
-  const similarities = knowledgeBaseVectors.map((kbVector, index) => ({
-    index,
-    score: cosineSimilarity(queryVector, kbVector),
-  }));
+  // 2. Perform vector similarity search in Supabase
+  const { data: documents, error } = await supabase.rpc("match_documents", {
+    query_embedding: queryVector,
+    match_count: k,
+    filter: {}, // Optional filter for metadata
+  }).select("content");
 
-  // 3. Sort by score and select the top K chunks
-  similarities.sort((a, b) => b.score - a.score);
-  const topKIndices = similarities.slice(0, k).map(s => s.index);
+  if (error) {
+    console.error("Supabase retrieval error:", error);
+    throw new Error("Failed to retrieve context from knowledge base.");
+  }
 
-  // 4. Retrieve the original text chunks
-  const relevantChunks = topKIndices.map(index => KNOWLEDGE_BASE_CHUNKS[index]);
+  // Assert documents is an array for TypeScript
+  const relevantDocuments = documents as { content: string }[] | null;
+
+  if (!relevantDocuments || relevantDocuments.length === 0) {
+    return ["No relevant documents found in the knowledge base."];
+  }
+
+  // 3. Extract and return the content chunks
+  const relevantChunks = relevantDocuments.map(doc => doc.content);
 
   return relevantChunks;
 }
+
+// We no longer need initializeRAG() as the data is persistent.
+// However, we need a SQL function for vector search.
+// The user must execute the following SQL function in Supabase:
+/*
+CREATE OR REPLACE FUNCTION match_documents (
+  query_embedding vector(768),
+  match_count int,
+  filter jsonb DEFAULT '{}'
+)
+RETURNS TABLE (
+  id bigint,
+  content text,
+  metadata jsonb,
+  similarity float
+)
+LANGUAGE plpgsql
+AS $$
+#variable_conflict use_column
+BEGIN
+  RETURN query
+  SELECT
+    id,
+    content,
+    metadata,
+    1 - (documents.embedding <=> query_embedding) AS similarity
+  FROM documents
+  WHERE metadata @> filter
+  ORDER BY documents.embedding <=> query_embedding
+  LIMIT match_count;
+END;
+$$;
+*/

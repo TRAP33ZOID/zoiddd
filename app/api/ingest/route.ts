@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { RecursiveCharacterTextSplitter } from "langchain";
+import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import { ai, EMBEDDING_MODEL } from "@/lib/gemini";
 import { supabase, DOCUMENTS_TABLE } from "@/lib/supabase";
 
