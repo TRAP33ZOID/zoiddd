@@ -62,13 +62,13 @@ This phase established the foundational RAG intelligence using a text-based chat
 | Step | Description | Status |
 | :--- | :--- | :--- |
 | 1 | Select and install STT/TTS SDKs (Google Cloud Speech/Text-to-Speech). | [x] |
-| 2 | Design the real-time voice API route (`/api/voice`). | [ ] |
-| 3 | Implement Speech-to-Text (STT) logic to convert user audio to text. | [ ] |
-| 4 | Integrate STT output with the existing RAG system (`lib/rag.ts`). | [ ] |
-| 5 | Implement Text-to-Speech (TTS) logic to convert the RAG response to audio. | [ ] |
-| 6 | Update the frontend chat interface to include microphone input and audio playback. | [ ] |
+| 2 | Design the real-time voice API route (`/api/voice`). | [x] |
+| 3 | Implement Speech-to-Text (STT) logic to convert user audio to text. | [x] |
+| 4 | Integrate STT output with the existing RAG system (`lib/rag.ts`). | [x] |
+| 5 | Implement Text-to-Speech (TTS) logic to convert the RAG response to audio. | [x] |
+| 6 | Update the frontend chat interface to include microphone input and audio playback. | [x] |
 | 7 | Test and verify real-time voice interaction. | [ ] |
-| 8 | Commit Phase 3 progress to Git repository. | [ ] |
+| 8 | Commit Phase 3 progress to Git repository. | [-] |
 
 ## 7. Next Steps (Future Phases)
 
@@ -88,3 +88,15 @@ Then, switch to Architect mode to begin planning the next steps.
 The next agent taking over should focus on these priorities:
 
 1.  **Voice Integration:** Continue integrating real-time voice capabilities (Speech-to-Text and Text-to-Speech) to fulfill the Retell AI-like voice agent goal.
+
+## 8. Phase 3: Voice Integration - Custom Server Requirement
+
+The implementation of the real-time voice agent relies on WebSockets for bidirectional audio streaming. Due to limitations in the Next.js App Router, a custom Node.js server file (e.g., `server.js`) is required to wrap the Next.js application and handle the WebSocket upgrade event on the `/api/voice` path.
+
+**Required Custom Server Setup:**
+The custom server must:
+1.  Import and initialize the Next.js app.
+2.  Start a standard Node.js HTTP server.
+3.  Call `initializeWebSocketServer(httpServer)` from `lib/websocket-server.ts`.
+4.  Listen for the `upgrade` event on the HTTP server and call `handleUpgrade(req, socket, head)` from `lib/websocket-server.ts` when the path is `/api/voice`.
+5.  Update the `dev` and `start` scripts in `package.json` to use the custom server file.

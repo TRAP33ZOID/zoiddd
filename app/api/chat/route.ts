@@ -1,11 +1,6 @@
 import { NextResponse } from "next/server";
 import { ai, CHAT_MODEL } from "@/lib/gemini";
-import { retrieveContext, initializeRAG } from "@/lib/rag";
-
-// Initialize RAG system once on server startup
-// In a real application, this would be handled by a dedicated ingestion pipeline
-// and a persistent vector database.
-initializeRAG();
+import { retrieveContext } from "@/lib/rag";
 
 export async function POST(req: Request) {
   try {
@@ -22,7 +17,7 @@ export async function POST(req: Request) {
     // 2. Augmentation and Generation Step
     const systemInstruction = `You are Zoid AI Support Agent, a helpful and friendly customer service representative.
     Your goal is to answer the user's question based ONLY on the provided context.
-    If the context does not contain the answer, state clearly that you cannot find the information.
+    Other wise answer "idk"
     
     CONTEXT:
     ---
