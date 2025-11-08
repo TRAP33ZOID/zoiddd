@@ -3,9 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "ts-node -r tsconfig-paths/register server.js",
+    "dev": "concurrently \"npm run next:dev\" \"npm run ws:dev\"",
+    "next:dev": "next dev",
     "build": "next build",
-    "start": "ts-node -r tsconfig-paths/register server.js",
+    "start": "next start",
+    "ws:dev": "cross-env DOTENV_CONFIG_PATH=./.env.local ts-node -r tsconfig-paths/register -r dotenv/config ws-server.ts",
     "lint": "eslint"
   },
   "dependencies": {
@@ -52,6 +54,8 @@
     "@types/node": "24.10.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "concurrently": "^9.2.1",
+    "cross-env": "^10.1.0",
     "dotenv": "^17.2.3",
     "eslint": "^9",
     "eslint-config-next": "16.0.1",

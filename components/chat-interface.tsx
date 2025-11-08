@@ -88,8 +88,9 @@ export function ChatInterface() {
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) return wsRef.current;
 
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const host = window.location.host;
-    const url = `${protocol}//${host}/api/voice`;
+    // Use a dedicated port for the WebSocket server (3001)
+    const host = window.location.hostname;
+    const url = `${protocol}//${host}:3001`;
     
     const ws = new WebSocket(url);
     wsRef.current = ws;
@@ -176,6 +177,7 @@ export function ChatInterface() {
         // Send raw audio data over WebSocket
         if (ws.readyState === WebSocket.OPEN) {
           ws.send(int16Array.buffer);
+          console.log(`Sending audio chunk of size: ${int16Array.buffer.byteLength}`);
         }
       };
 

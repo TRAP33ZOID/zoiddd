@@ -1,16 +1,9 @@
-import { WebSocket, WebSocketServer } from "ws";
-import { IncomingMessage } from "http";
-import { Socket } from "net";
+import { WebSocket } from "ws";
 import { Writable } from "stream";
 import { createSttStream } from "./stt.ts";
 import { retrieveContext } from "./rag.ts";
 import { ai, CHAT_MODEL } from "./gemini.ts";
 import { synthesizeSpeechStream } from "./tts.ts";
-
-// Global variable to hold the WebSocket server instance
-// This is a common pattern in Next.js development environments to ensure
-// the server is only initialized once across hot reloads.
-let wss: WebSocketServer | undefined;
 
 // System instruction for the RAG agent
 const SYSTEM_INSTRUCTION = `You are Zoid AI Support Agent, a helpful and friendly customer service representative.
@@ -21,7 +14,7 @@ If the context does not contain the answer, you MUST politely state that you do 
  * Handles a new WebSocket connection.
  * @param ws The WebSocket instance.
  */
-function handleConnection(ws: WebSocket) {
+export function handleVoiceConnection(ws: WebSocket) {
   console.log("New WebSocket connection established.");
 
   let sttStream: ReturnType<typeof createSttStream> | null = null;
@@ -138,41 +131,4 @@ function handleConnection(ws: WebSocket) {
     console.error("WebSocket Error:", error);
     sttStream?.end();
   });
-}
-
-/**
- * Initializes and returns the WebSocket server instance.
- * @param server The HTTP server instance from Next.js.
- */
-export function initializeWebSocketServer(server: import("http").Server) {
-  if (!wss) {
-    console.log("Initializing WebSocket Server...");
-    wss = new WebSocketServer({ noServer: true });
-
-    wss.on("connection", handleConnection);
-  }
-  return wss;
-}
-
-/**
- * Handles the WebSocket upgrade request.
- * @param req The incoming HTTP request.
- * @param socket The network socket.
- * @param head The buffer of the first packet.
- */
-export function handleUpgrade(req: IncomingMessage, socket: Socket, head: Buffer) {
-  if (!wss) {
-    console.error("WebSocket Server not initialized.");
-    socket.destroy();
-    return;
-  }
-
-  // Check if the request is for the specific voice path
-  if (req.url === "/api/voice") {
-    wss.handleUpgrade(req, socket, head, (ws) => {
-      wss?.emit("connection", ws, req);
-    });
-  } else {
-    socket.destroy();
-  }
 }
