@@ -57,18 +57,39 @@ This phase established the foundational RAG intelligence using a text-based chat
 | 8 | Implement frontend UI for document upload. | [x] |
 | 9 | Test and verify ingestion/retrieval security fix. | [x] |
 
-## 6. Phase 3: Voice Integration (In Progress)
+## 6. Phase 3: Voice Integration (Completed)
 
 | Step | Description | Status |
 | :--- | :--- | :--- |
 | 1 | Select and install STT/TTS SDKs (Google Cloud Speech/Text-to-Speech). | [x] |
-| 2 | Design the real-time voice API route (`/api/voice`). | [ ] |
-| 3 | Implement Speech-to-Text (STT) logic to convert user audio to text. | [ ] |
-| 4 | Integrate STT output with the existing RAG system (`lib/rag.ts`). | [ ] |
-| 5 | Implement Text-to-Speech (TTS) logic to convert the RAG response to audio. | [ ] |
-| 6 | Update the frontend chat interface to include microphone input and audio playback. | [ ] |
-| 7 | Test and verify real-time voice interaction. | [ ] |
-| 8 | Commit Phase 3 progress to Git repository. | [ ] |
+| 2 | Design the real-time voice API route (`/api/voice`). | [x] |
+| 3 | Implement Speech-to-Text (STT) logic to convert user audio to text. | [x] |
+| 4 | Integrate STT output with the existing RAG system (`lib/rag.ts`). | [x] |
+| 5 | Implement Text-to-Speech (TTS) logic to convert the RAG response to audio. | [x] |
+| 6 | Update the frontend chat interface to include microphone input and audio playback. | [x] |
+| 7 | Test and verify real-time voice interaction. | [x] |
+| 8 | Commit Phase 3 progress to Git repository. | [x] |
+
+### Phase 3 Implementation Details
+
+**New Files Created:**
+- `lib/google-cloud-key.json` - Google Cloud service account credentials
+- `lib/voice.ts` - Voice service layer (STT & TTS helper functions)
+- `app/api/voice/route.ts` - Real-time voice processing endpoint
+
+**Modified Files:**
+- `.env.local` - Added Google Cloud environment variables
+- `components/chat-interface.tsx` - Enhanced with voice recording & playback UI
+- `package.json` - Added `@google-cloud/speech` & `@google-cloud/text-to-speech`
+
+**Key Features:**
+- Real-time audio recording via Web Audio API with browser microphone
+- Speech-to-Text conversion using Google Cloud Speech API
+- Full RAG integration (transcribed text → context retrieval → AI response)
+- Text-to-Speech conversion using Google Cloud TTS API
+- Audio playback with UI controls
+- Visual feedback (recording timer, processing indicators)
+- Backward compatible with text-based chat
 
 ## 7. Next Steps (Future Phases)
 
