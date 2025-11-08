@@ -1,11 +1,6 @@
 import { NextResponse } from "next/server";
 import { ai, CHAT_MODEL } from "@/lib/gemini";
-import { retrieveContext, initializeRAG } from "@/lib/rag";
-
-// Initialize RAG system once on server startup
-// In a real application, this would be handled by a dedicated ingestion pipeline
-// and a persistent vector database.
-initializeRAG();
+import { retrieveContext } from "@/lib/rag";
 
 export async function POST(req: Request) {
   try {
