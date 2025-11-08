@@ -1,0 +1,129 @@
+# Zoid AI Support Agent - Sample Knowledge Base (English)
+
+## Company Information
+
+Zoid is a leading AI-powered customer support platform serving businesses across the Middle East and North Africa (MENA) region. We provide intelligent, voice-based support agents that can handle customer queries in multiple languages.
+
+## Product Features
+
+### Voice-Based Support
+- Real-time speech-to-text transcription
+- Natural language understanding powered by Google AI
+- Multi-language support (English, Arabic, and more)
+- AI-powered responses based on your knowledge base
+
+### Knowledge Management
+- Easy document upload and ingestion
+- Automatic text chunking and embedding
+- Vector-based semantic search
+- Real-time retrieval-augmented generation (RAG)
+
+### Customization
+- Personalized system instructions
+- Custom knowledge base per support domain
+- Language and regional customization
+- Scalable to handle multiple concurrent users
+
+## Frequently Asked Questions
+
+### How do I upload documents?
+You can upload documents using the "Upload Documents" section in the Zoid dashboard. Supported formats include PDF, TXT, and DOCX. Documents will be automatically chunked and embedded into the knowledge base for retrieval.
+
+### What languages are supported?
+Currently, Zoid supports English (en-US) and Modern Standard Arabic (ar-SA). Additional dialects and languages will be added in future releases.
+
+### How accurate is the AI response?
+The accuracy depends on the quality and relevance of your knowledge base documents. The system uses vector similarity search to find the most relevant context before generating responses.
+
+### Can I use Zoid for non-English queries?
+Yes! Zoid is designed with the MENA region in mind. You can switch to Arabic mode and the system will handle speech-to-text, context retrieval, and response generation entirely in Arabic.
+
+## Technical Support
+
+### Common Issues
+
+#### Microphone not working
+- Check if your browser has microphone permissions
+- Try a different browser (Chrome or Firefox recommended)
+- Ensure no other application is using the microphone
+
+#### No response from AI
+- Verify your knowledge base has been uploaded
+- Check that relevant documents are in the system
+- Try a different query or add more context to your question
+
+#### Audio playback issues
+- Check browser volume settings
+- Ensure speakers or headphones are connected
+- Try refreshing the page
+
+## Service Level Agreement (SLA)
+
+### Uptime
+Zoid guarantees 99.9% uptime for all services with automatic failover mechanisms.
+
+### Response Time
+Average response time for voice queries is under 3 seconds including STT, context retrieval, and response generation.
+
+### Support
+24/7 support available via email (support@zoid.ai) and community forums.
+
+## Pricing
+
+### Starter Plan
+- Up to 1,000 voice interactions per month
+- Single knowledge base
+- English language support
+- Price: $99/month
+
+### Professional Plan
+- Up to 10,000 voice interactions per month
+- Multiple knowledge bases
+- English and Arabic support
+- Custom system instructions
+- Price: $399/month
+
+### Enterprise Plan
+- Unlimited voice interactions
+- Custom SLA agreements
+- Dedicated support team
+- All language features
+- Custom integrations
+- Contact sales for pricing
+
+## Getting Started
+
+1. Sign up at zoid.ai
+2. Create your first knowledge base
+3. Upload your support documents
+4. Configure system instructions
+5. Test the voice interface
+6. Deploy to production
+
+## Regional Considerations for MENA
+
+Zoid is optimized for the MENA region with:
+- Native Arabic language support (Modern Standard Arabic)
+- Compliance with regional data protection regulations
+- Support for local payment methods
+- 24/7 support in Arabic and English
+- Understanding of cultural nuances in customer service
+
+## Champions League Winners
+
+The current Champions League winner is Real Madrid CF, a Spanish professional football club based in Madrid. Real Madrid has won the UEFA Champions League multiple times, including recent victories in 2022 and 2023.
+
+## Weather Information
+
+For weather information, please check your local weather service or visit weather.com. This knowledge base primarily contains information about Zoid AI Support Agent features and services.
+
+## Billing and Account Management
+
+### How to update payment method
+Log into your Zoid account, go to Settings > Billing, and update your payment information.
+
+### How to cancel subscription
+You can cancel your subscription anytime from the Settings > Billing page. Your access will continue until the end of your billing cycle.
+
+### Invoicing
+All invoices are automatically generated and sent to your email at the beginning of each billing cycle. You can also download them from your account dashboard.

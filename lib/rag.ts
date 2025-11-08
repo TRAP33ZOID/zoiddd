@@ -26,7 +26,7 @@ async function embedText(text: string): Promise<number[]> {
  * @param k The number of top relevant chunks to retrieve.
  * @returns An array of relevant text chunks.
  */
-export async function retrieveContext(query: string, k: number = 2): Promise<string[]> {
+export async function retrieveContext(query: string, language: string, k: number = 2): Promise<string[]> {
   // 1. Embed the user query
   const queryVector = await embedText(query);
 
@@ -34,6 +34,7 @@ export async function retrieveContext(query: string, k: number = 2): Promise<str
   const { data: documents, error } = await supabase.rpc("match_documents", {
     query_embedding: queryVector,
     match_count: k,
+    language, // Pass the language parameter for filtering
     filter: {}, // Optional filter for metadata
   }).select("content");
 

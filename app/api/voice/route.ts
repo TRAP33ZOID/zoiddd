@@ -2,14 +2,34 @@ import { NextResponse } from "next/server";
 import { speechToText, textToAudio } from "@/lib/voice";
 import { retrieveContext } from "@/lib/rag";
 import { ai, CHAT_MODEL } from "@/lib/gemini";
+import { getSystemInstruction, isValidLanguage, getDefaultLanguage } from "@/lib/language";
 
 export async function POST(req: Request) {
+  const requestStartTime = Date.now();
+  console.log("\n========================================");
+  console.log("🎤 [VOICE API] New voice request received");
+  console.log("========================================");
+  
   try {
-    // 1. Extract audio from request
+    // 1. Extract audio from request and get language parameter
+    console.log("📦 [VOICE API] Parsing form data...");
     const formData = await req.formData();
     const audioBlob = formData.get("audio") as Blob;
+    const languageParam = (formData.get("language") as string) || getDefaultLanguage();
+    
+    console.log(`  Language Parameter: ${languageParam}`);
+    console.log(`  Audio Blob Type: ${audioBlob?.type}`);
+    console.log(`  Audio Blob Size: ${audioBlob?.size} bytes`);
+    
+    // Validate language parameter
+    const language = isValidLanguage(languageParam) ? languageParam : getDefaultLanguage();
+    
+    if (languageParam !== language) {
+      console.log(`  ⚠️ WARNING: Invalid language '${languageParam}', using default '${language}'`);
+    }
 
     if (!audioBlob) {
+      console.error("  ❌ ERROR: Audio blob missing");
       return NextResponse.json(
         { error: "Audio blob is required" },
         { status: 400 }
@@ -17,20 +37,30 @@ export async function POST(req: Request) {
     }
 
     const audioBuffer = Buffer.from(await audioBlob.arrayBuffer());
+    console.log(`  ✅ Audio buffer created: ${audioBuffer.length} bytes`);
 
     // 2. Convert speech to text (STT)
-    // Browser records WebM/Opus at 48kHz
-    const userQuery = await speechToText(audioBuffer, "WEBM_OPUS");
-    console.log("Transcribed query:", userQuery);
+    console.log("\n🎤 [VOICE API] Step 2: Starting STT...");
+    const sttStartTime = Date.now();
+    const userQuery = await speechToText(audioBuffer, "WEBM_OPUS", language);
+    const sttDuration = Date.now() - sttStartTime;
+    console.log(`  ✅ STT completed in ${sttDuration}ms`);
+    console.log(`  Transcribed query: "${userQuery}"`);
 
     // 3. Retrieve context using RAG
-    const contextChunks = await retrieveContext(userQuery);
+    console.log("\n📚 [VOICE API] Step 3: Retrieving context...");
+    const ragStartTime = Date.now();
+    const contextChunks = await retrieveContext(userQuery, language);
+    const ragDuration = Date.now() - ragStartTime;
+    console.log(`  ✅ RAG completed in ${ragDuration}ms`);
+    console.log(`  Context chunks retrieved: ${contextChunks.length}`);
     const context = contextChunks.join("\n---\n");
 
     // 4. Generate AI response using Gemini
-    const systemInstruction = `You are Zoid AI Support Agent, a helpful and friendly customer service representative.
-Your goal is to answer the user's question based ONLY on the provided context.
-If the context does not contain the answer, state clearly that you cannot find the information.
+    console.log("\n🤖 [VOICE API] Step 4: Generating AI response...");
+    const aiStartTime = Date.now();
+    const baseSystemInstruction = getSystemInstruction(language);
+    const systemInstruction = `${baseSystemInstruction}
 
 CONTEXT:
 ---
@@ -47,22 +77,49 @@ ${context}
     });
 
     const aiResponse = response.text || "Sorry, I could not generate a response.";
-    console.log("AI response:", aiResponse);
+    const aiDuration = Date.now() - aiStartTime;
+    console.log(`  ✅ AI response generated in ${aiDuration}ms`);
+    console.log(`  Response preview: "${aiResponse.substring(0, 100)}${aiResponse.length > 100 ? '...' : ''}"`);
 
     // 5. Convert AI response to speech (TTS)
-    const audioResponseBuffer = await textToAudio(aiResponse, "en-US");
+    console.log("\n🔊 [VOICE API] Step 5: Converting to speech...");
+    const ttsStartTime = Date.now();
+    const audioResponseBuffer = await textToAudio(aiResponse, language);
+    const ttsDuration = Date.now() - ttsStartTime;
+    console.log(`  ✅ TTS completed in ${ttsDuration}ms`);
 
     // 6. Return both text and audio to client
+    const totalDuration = Date.now() - requestStartTime;
+    console.log("\n✅ [VOICE API] Request completed successfully");
+    console.log(`  Total Duration: ${totalDuration}ms`);
+    console.log(`    - STT: ${sttDuration}ms`);
+    console.log(`    - RAG: ${ragDuration}ms`);
+    console.log(`    - AI: ${aiDuration}ms`);
+    console.log(`    - TTS: ${ttsDuration}ms`);
+    console.log("========================================\n");
+    
     return NextResponse.json({
       transcript: userQuery,
       response: aiResponse,
       audioBuffer: audioResponseBuffer.toString("base64"),
       context: contextChunks,
+      language: language,
     });
-  } catch (error) {
-    console.error("Voice API Error:", error);
+  } catch (error: any) {
+    const totalDuration = Date.now() - requestStartTime;
+    console.error("\n❌ [VOICE API] Request FAILED");
+    console.error(`  Total Duration: ${totalDuration}ms`);
+    console.error("  Error Type:", error.constructor?.name || "Unknown");
+    console.error("  Error Message:", error.message);
+    console.error("  Error Stack:", error.stack);
+    console.error("========================================\n");
+    
     return NextResponse.json(
-      { error: "Internal Server Error during voice processing" },
+      {
+        error: "Internal Server Error during voice processing",
+        details: error.message,
+        errorType: error.constructor?.name || "Unknown"
+      },
       { status: 500 }
     );
   }

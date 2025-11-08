@@ -22,20 +22,31 @@ const ttsClient = new textToSpeech.TextToSpeechClient({
  * Converts audio buffer (WAV/MP3) to text using Google Cloud Speech-to-Text
  * @param audioBuffer The audio data as a Buffer
  * @param encoding Audio encoding (LINEAR16, MP3, etc.)
+ * @param languageCode Language code for transcription (default: en-US)
  * @returns Promise resolving to transcribed text
  */
 export async function speechToText(
   audioBuffer: Buffer,
-  encoding: string = "LINEAR16"
+  encoding: string = "LINEAR16",
+  languageCode: string = "en-US"
 ): Promise<string> {
+  // === DIAGNOSTIC LOGGING START ===
+  console.log("🎤 [STT] Starting Speech-to-Text conversion");
+  console.log(`  Language: ${languageCode}`);
+  console.log(`  Encoding: ${encoding}`);
+  console.log(`  Audio Buffer Size: ${audioBuffer.length} bytes`);
+  
   const audio = {
     content: audioBuffer,
   };
 
   const config = {
     encoding: encoding,
-    languageCode: "en-US",
+    languageCode: languageCode,
     model: "latest_long",
+    enableAutomaticPunctuation: true,
+    // Add sample rate hint for WebM/Opus (48kHz is standard for browser recording)
+    sampleRateHertz: encoding === "WEBM_OPUS" ? 48000 : undefined,
   };
 
   const request = {
@@ -43,8 +54,29 @@ export async function speechToText(
     audio,
   };
 
+  console.log("  Config:", JSON.stringify(config, null, 2));
+  // === DIAGNOSTIC LOGGING END ===
+
   try {
+    console.log("  Sending request to Google Cloud Speech API...");
     const [response] = await speechClient.recognize(request as any);
+    
+    // === DIAGNOSTIC LOGGING START ===
+    console.log("  ✅ Response received from Google Cloud");
+    console.log("  Results count:", response.results?.length || 0);
+    
+    if (response.results && response.results.length > 0) {
+      response.results.forEach((result: any, index: number) => {
+        const alternative = result.alternatives?.[0];
+        console.log(`  Result ${index + 1}:`);
+        console.log(`    Transcript: "${alternative?.transcript || '(empty)'}"`);
+        console.log(`    Confidence: ${alternative?.confidence || 'N/A'}`);
+      });
+    } else {
+      console.log("  ⚠️ WARNING: No results returned from API");
+    }
+    // === DIAGNOSTIC LOGGING END ===
+    
     const transcription = response.results
       ?.map(
         (result: any) =>
@@ -53,13 +85,20 @@ export async function speechToText(
       .join("\n");
 
     if (!transcription) {
+      console.error("  ❌ ERROR: Empty transcription result");
       throw new Error("No transcription result from Google Cloud Speech");
     }
 
+    console.log(`  ✅ Final transcription: "${transcription}"`);
     return transcription;
-  } catch (error) {
-    console.error("STT Error:", error);
-    throw new Error("Failed to convert speech to text");
+  } catch (error: any) {
+    console.error("  ❌ STT Error Details:");
+    console.error("    Error Type:", error.constructor.name);
+    console.error("    Error Message:", error.message);
+    console.error("    Error Code:", error.code);
+    console.error("    Error Details:", error.details);
+    console.error("    Full Error:", error);
+    throw new Error(`Failed to convert speech to text: ${error.message}`);
   }
 }
 
@@ -73,6 +112,13 @@ export async function textToAudio(
   text: string,
   languageCode: string = "en-US"
 ): Promise<Buffer> {
+  // === DIAGNOSTIC LOGGING START ===
+  console.log("🔊 [TTS] Starting Text-to-Speech conversion");
+  console.log(`  Language: ${languageCode}`);
+  console.log(`  Text Length: ${text.length} characters`);
+  console.log(`  Text Preview: "${text.substring(0, 50)}${text.length > 50 ? '...' : ''}"`);
+  // === DIAGNOSTIC LOGGING END ===
+  
   const request = {
     input: { text },
     voice: {
@@ -86,20 +132,30 @@ export async function textToAudio(
     },
   };
 
+  console.log("  Voice Config:", JSON.stringify(request.voice, null, 2));
+
   try {
+    console.log("  Sending request to Google Cloud TTS API...");
     const [response] = await ttsClient.synthesizeSpeech(request as any);
     const audioContent = response.audioContent;
 
     if (!audioContent) {
+      console.error("  ❌ ERROR: No audio content in response");
       throw new Error("No audio content from Google Cloud Text-to-Speech");
     }
 
-    // Convert to Buffer if it's a Uint8Array
-    return Buffer.isBuffer(audioContent)
+    const buffer = Buffer.isBuffer(audioContent)
       ? audioContent
       : Buffer.from(audioContent);
-  } catch (error) {
-    console.error("TTS Error:", error);
-    throw new Error("Failed to convert text to speech");
+    
+    console.log(`  ✅ Audio generated successfully (${buffer.length} bytes)`);
+    return buffer;
+  } catch (error: any) {
+    console.error("  ❌ TTS Error Details:");
+    console.error("    Error Type:", error.constructor.name);
+    console.error("    Error Message:", error.message);
+    console.error("    Error Code:", error.code);
+    console.error("    Full Error:", error);
+    throw new Error(`Failed to convert text to speech: ${error.message}`);
   }
 }

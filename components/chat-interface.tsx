@@ -4,7 +4,8 @@ import React, { useState, useRef, useEffect } from "react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Mic, Square, Volume2 } from "lucide-react";
+import { Mic, Square, Volume2, Globe, Copy } from "lucide-react";
+import { getLanguageOptions, getDefaultLanguage } from "@/lib/language";
 
 interface Message {
   id: number;
@@ -20,6 +21,7 @@ export function ChatInterface() {
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const [pendingAudioBlob, setPendingAudioBlob] = useState<Blob | null>(null);
+  const [currentLanguage, setCurrentLanguage] = useState<string>(getDefaultLanguage());
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -93,6 +95,7 @@ export function ChatInterface() {
     setIsLoading(true);
     const formData = new FormData();
     formData.append("audio", audioBlob);
+    formData.append("language", currentLanguage);
 
     // Show recording indicator
     const recordingMessage: Message = {
@@ -193,7 +196,7 @@ export function ChatInterface() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ query: userMessage.text }),
+        body: JSON.stringify({ query: userMessage.text, language: currentLanguage }),
       });
 
       if (!res.ok) {
@@ -229,9 +232,14 @@ export function ChatInterface() {
     }
   };
 
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    alert("Copied to clipboard!");
+  };
+
   const MessageBubble = ({ message }: { message: Message }) => (
     <div
-      className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"} mb-4`}
+      className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"} mb-4 group`}
     >
       <div
         className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg shadow-md ${
@@ -239,27 +247,57 @@ export function ChatInterface() {
             ? "bg-blue-500 text-white"
             : "bg-gray-100 text-gray-800"
         }`}
+        dir={currentLanguage === "ar-SA" ? "rtl" : "ltr"}
       >
         <p>{message.text}</p>
-        {message.audioBase64 && (
+        <div className="flex gap-2 mt-2 flex-wrap">
+          {message.audioBase64 && (
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => playAudio(message.audioBase64!)}
+              className="h-8"
+            >
+              <Volume2 className="w-4 h-4 mr-2" />
+              Play Audio
+            </Button>
+          )}
           <Button
             size="sm"
             variant="ghost"
-            onClick={() => playAudio(message.audioBase64!)}
-            className="mt-2"
+            onClick={() => copyToClipboard(message.text)}
+            className="h-8 opacity-0 group-hover:opacity-100 transition-opacity"
+            title="Copy message to clipboard"
           >
-            <Volume2 className="w-4 h-4 mr-2" />
-            Play Audio
+            <Copy className="w-4 h-4" />
           </Button>
-        )}
+        </div>
       </div>
     </div>
   );
 
+  const languageOptions = getLanguageOptions();
+
   return (
     <Card className="w-full max-w-3xl mx-auto h-[80vh] flex flex-col">
       <CardHeader>
-        <CardTitle>🎙️ Zoid AI Support Agent (Voice-Enabled)</CardTitle>
+        <div className="flex justify-between items-center">
+          <CardTitle>🎙️ Zoid AI Support Agent (Voice-Enabled)</CardTitle>
+          <div className="flex items-center space-x-2">
+            <Globe className="w-4 h-4" />
+            <select
+              value={currentLanguage}
+              onChange={(e) => setCurrentLanguage(e.target.value)}
+              className="px-3 py-1 border rounded-md text-sm"
+            >
+              {languageOptions.map((lang) => (
+                <option key={lang.code} value={lang.code}>
+                  {lang.nativeName}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
       </CardHeader>
       <CardContent className="flex-grow overflow-hidden p-4">
         <div className="h-full overflow-y-auto pr-4">

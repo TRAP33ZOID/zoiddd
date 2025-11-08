@@ -1,17 +1,20 @@
 import { NextResponse } from "next/server";
 import { ai, CHAT_MODEL } from "@/lib/gemini";
 import { retrieveContext } from "@/lib/rag";
+import { getDefaultLanguage, isValidLanguage } from "@/lib/language";
 
 export async function POST(req: Request) {
   try {
-    const { query } = await req.json();
+    const { query, language: languageParam } = await req.json();
 
     if (!query) {
       return NextResponse.json({ error: "Query is required" }, { status: 400 });
     }
+    
+    const language = isValidLanguage(languageParam) ? languageParam : getDefaultLanguage();
 
     // 1. Retrieval Step (RAG)
-    const contextChunks = await retrieveContext(query);
+    const contextChunks = await retrieveContext(query, language);
     const context = contextChunks.join("\n---\n");
 
     // 2. Augmentation and Generation Step

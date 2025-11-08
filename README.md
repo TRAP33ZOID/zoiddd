@@ -1,36 +1,306 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🎙️ Zoid AI Support Agent
 
-## Getting Started
+A production-ready, bilingual (English/Arabic) voice-enabled AI customer support agent built with Next.js, featuring real-time speech interaction and RAG-powered knowledge retrieval.
 
-First, run the development server:
+## ✨ Features
+
+- 🗣️ **Real-time Voice Interaction**: Speech-to-Text and Text-to-Speech using Google Cloud APIs
+- 🌍 **Bilingual Support**: Full English and Modern Standard Arabic (ar-SA) support
+- 📚 **RAG-Powered Knowledge Base**: Vector-based document retrieval using Supabase pgvector
+- 🎯 **Language-Aware Retrieval**: Automatic language filtering for context accuracy
+- 📝 **Text & Voice Chat**: Seamless switching between text and voice input
+- 🔄 **RTL Support**: Right-to-left text rendering for Arabic
+- 📊 **Comprehensive Logging**: Built-in diagnostic infrastructure for monitoring
+
+## 🛠️ Tech Stack
+
+- **Framework**: Next.js 16 (App Router)
+- **AI Model**: Google Gemini 2.5 Flash
+- **Embeddings**: text-embedding-004 (768 dimensions)
+- **Vector Database**: Supabase with pgvector
+- **Voice Services**: Google Cloud Speech-to-Text & Text-to-Speech
+- **Frontend**: React 19, TailwindCSS, shadcn/ui
+- **Language**: TypeScript
+
+## 📋 Prerequisites
+
+Before you begin, ensure you have:
+
+- **Node.js** 18+ installed
+- **npm** or **yarn** package manager
+- **Google Cloud Platform** account with:
+  - Speech-to-Text API enabled
+  - Text-to-Speech API enabled
+  - Gemini API access
+- **Supabase** account (free tier works)
+- **Git** for version control
+
+## 🚀 Setup Instructions
+
+### 1. Clone the Repository
+
+```bash
+git clone <your-repo-url>
+cd zoiddd
+```
+
+### 2. Install Dependencies
+
+```bash
+npm install
+```
+
+### 3. Set Up Environment Variables
+
+Create a `.env.local` file in the root directory:
+
+```env
+# Google Gemini API
+GEMINI_API_KEY=your_gemini_api_key_here
+
+# Supabase Configuration
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key_here
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key_here
+```
+
+**How to get these keys:**
+
+#### Gemini API Key
+1. Go to [Google AI Studio](https://makersuite.google.com/app/apikey)
+2. Create a new API key
+3. Copy and paste into `.env.local`
+
+#### Supabase Keys
+1. Create a project at [Supabase](https://supabase.com)
+2. Go to Project Settings → API
+3. Copy the **Project URL** and **anon public** key
+4. Copy the **service_role** key (keep this secret!)
+
+### 4. Set Up Google Cloud Credentials
+
+#### 4.1 Create a Service Account
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com)
+2. Create a new project or select existing one
+3. Go to **IAM & Admin** → **Service Accounts**
+4. Click **Create Service Account**
+5. Grant the following roles:
+   - **Cloud Speech-to-Text API User**
+   - **Cloud Text-to-Speech API User**
+6. Create and download a **JSON key file**
+
+#### 4.2 Add Credentials to Project
+
+1. Rename the downloaded JSON file to `google-cloud-key.json`
+2. Place it in the `lib/` directory:
+   ```
+   lib/google-cloud-key.json
+   ```
+3. **Important**: This file is already in `.gitignore` - never commit it to Git!
+
+### 5. Configure Supabase Database
+
+#### 5.1 Create the Documents Table
+
+Run this SQL in your Supabase SQL Editor:
+
+```sql
+-- Enable pgvector extension
+CREATE EXTENSION IF NOT EXISTS vector;
+
+-- Create documents table
+CREATE TABLE documents (
+  id BIGSERIAL PRIMARY KEY,
+  content TEXT NOT NULL,
+  embedding vector(768),
+  metadata JSONB DEFAULT '{}',
+  language VARCHAR(10) DEFAULT 'en-US',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Create index for vector similarity search
+CREATE INDEX ON documents USING ivfflat (embedding vector_cosine_ops)
+  WITH (lists = 100);
+
+-- Create index for language filtering
+CREATE INDEX idx_documents_language ON documents(language);
+```
+
+#### 5.2 Create the Match Documents Function
+
+Run this SQL in your Supabase SQL Editor:
+
+```sql
+CREATE OR REPLACE FUNCTION match_documents(
+  query_embedding vector(768),
+  match_count int,
+  language varchar DEFAULT 'en-US',
+  filter jsonb DEFAULT '{}'
+)
+RETURNS TABLE (
+  id bigint,
+  content text,
+  metadata jsonb,
+  similarity float
+)
+LANGUAGE plpgsql
+AS $$
+#variable_conflict use_column
+BEGIN
+  RETURN query
+  SELECT
+    id,
+    content,
+    metadata,
+    1 - (documents.embedding <=> query_embedding) AS similarity
+  FROM documents
+  WHERE documents.language = match_documents.language
+    AND metadata @> filter
+  ORDER BY documents.embedding <=> query_embedding
+  LIMIT match_count;
+END;
+$$;
+```
+
+### 6. Upload Sample Knowledge Base (Optional)
+
+Sample knowledge base files are provided in the `knowledge-bases/` directory:
+- `sample-en.txt` - English content
+- `sample-ar.txt` - Arabic content
+
+**To upload:**
+1. Start the dev server (see step 7)
+2. Open the ingestion form in the app
+3. Upload the sample files
+4. The system will automatically:
+   - Split text into chunks
+   - Generate embeddings
+   - Store in Supabase with language tags
+
+### 7. Run the Development Server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 8. Grant Microphone Permissions
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+When prompted by your browser, allow microphone access to use voice features.
 
-## Learn More
+## 📁 Project Structure
 
-To learn more about Next.js, take a look at the following resources:
+```
+zoiddd/
+├── app/
+│   ├── api/
+│   │   ├── chat/          # Text chat endpoint
+│   │   ├── voice/         # Voice interaction endpoint
+│   │   └── ingest/        # Document ingestion endpoint
+│   ├── globals.css        # Global styles
+│   ├── layout.tsx         # Root layout
+│   └── page.tsx           # Home page
+├── components/
+│   ├── chat-interface.tsx # Main chat UI component
+│   ├── ingestion-form.tsx # Document upload component
+│   └── ui/                # shadcn/ui components
+├── lib/
+│   ├── gemini.ts          # Gemini AI client
+│   ├── voice.ts           # STT/TTS functions
+│   ├── rag.ts             # RAG retrieval logic
+│   ├── supabase.ts        # Supabase client
+│   ├── language.ts        # Language configuration
+│   └── google-cloud-key.json # (YOU MUST CREATE THIS)
+├── knowledge-bases/       # Sample knowledge base files
+├── .env.local            # (YOU MUST CREATE THIS)
+└── PROJECT_HANDOVER.md   # Comprehensive technical documentation
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🎯 Usage
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Text Chat
+1. Select language (English | العربية) from dropdown
+2. Type your message in the input field
+3. Press "Send" or Enter
 
-## Deploy on Vercel
+### Voice Chat
+1. Select your preferred language
+2. Click the "Record" button
+3. Speak your question clearly
+4. Click "Send Recording"
+5. The AI will respond with both text and audio
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Document Ingestion
+1. Navigate to the ingestion page
+2. Select language (en-US or ar-SA)
+3. Upload a `.txt`, `.pdf`, or `.docx` file
+4. The system will process and store the content
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 📚 Documentation
+
+- **[PROJECT_HANDOVER.md](PROJECT_HANDOVER.md)** - Comprehensive technical documentation including:
+  - Complete development history (Phases 1-4A)
+  - Architecture decisions
+  - System dependencies
+  - Known constraints
+  - Future roadmap (Phases 4B-4E)
+  - Testing protocols
+
+## 🔐 Security Notes
+
+**Never commit these files:**
+- `.env.local` (contains API keys)
+- `lib/google-cloud-key.json` (contains service account credentials)
+
+These are already in `.gitignore`, but always double-check before committing.
+
+## 🐛 Troubleshooting
+
+### Microphone Not Working
+- Check browser permissions (Settings → Privacy → Microphone)
+- Try a different browser (Chrome/Firefox recommended)
+- Ensure no other app is using the microphone
+
+### STT/TTS Errors
+- Verify Google Cloud credentials are correct
+- Check that APIs are enabled in Google Cloud Console
+- Review server logs for detailed error messages
+
+### RAG Not Retrieving Context
+- Ensure documents are uploaded with correct language tag
+- Verify Supabase `match_documents()` function exists
+- Check that knowledge base has content for the selected language
+
+### Database Connection Issues
+- Verify Supabase URL and keys in `.env.local`
+- Check that the `documents` table exists
+- Ensure pgvector extension is enabled
+
+## 📊 Current Status
+
+- ✅ Phase 1: Core RAG Chat Implementation
+- ✅ Phase 2: Persistent Knowledge Base & Ingestion
+- ✅ Phase 3: Voice Integration
+- ✅ Phase 4A: Arabic Language Support (VERIFIED)
+- 🚧 Phase 4B: Tool Use / Function Calling (Planned)
+- 🚧 Phase 4C: Human Handoff System (Planned)
+- 🚧 Phase 4D: Multi-Session Management (Planned)
+- 🚧 Phase 4E: Production Hardening (Planned)
+
+## 📝 License
+
+[Add your license here]
+
+## 🤝 Contributing
+
+[Add contribution guidelines here]
+
+## 📧 Contact
+
+[Add contact information here]
+
+---
+
+**Built with ❤️ for the MENA region**
