@@ -19,6 +19,7 @@ export function ChatInterface() {
   const [isLoading, setIsLoading] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
+  const [pendingAudioBlob, setPendingAudioBlob] = useState<Blob | null>(null);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -56,11 +57,11 @@ export function ChatInterface() {
         audioChunksRef.current.push(event.data);
       };
 
-      mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
-        await handleVoiceInput(audioBlob);
-        stream.getTracks().forEach((track) => track.stop());
-      };
+      mediaRecorder.onstop = () => {
+       const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+       setPendingAudioBlob(audioBlob);
+       stream.getTracks().forEach((track) => track.stop());
+     };
 
       mediaRecorder.start();
       setIsRecording(true);
@@ -93,12 +94,13 @@ export function ChatInterface() {
     const formData = new FormData();
     formData.append("audio", audioBlob);
 
-    const aiMessage: Message = {
+    // Show recording indicator
+    const recordingMessage: Message = {
       id: Date.now() + 1,
-      text: "🎤 Processing your voice...",
+      text: "🎤 Recording received... transcribing...",
       sender: "ai",
     };
-    setMessages((prev) => [...prev, aiMessage]);
+    setMessages((prev) => [...prev, recordingMessage]);
 
     try {
       const res = await fetch("/api/voice", {
@@ -113,28 +115,37 @@ export function ChatInterface() {
       const data = await res.json();
       const responseText = data.response || "Sorry, I couldn't process that.";
       const audioBase64 = data.audioBuffer;
+      const transcript = data.transcript || "(No speech detected)";
 
       // Add user message with transcript
       const userMessage: Message = {
         id: Date.now(),
-        text: `📝 ${data.transcript}`,
+        text: `📝 You said: "${transcript}"`,
         sender: "user",
       };
+      
+      // Update the transcribing message with AI response
+      const aiResponseMessage: Message = {
+        id: Date.now() + 2,
+        text: responseText,
+        sender: "ai",
+        audioBase64: audioBase64,
+      };
+      
       setMessages((prev) => {
         const newMessages = [...prev];
-        newMessages[newMessages.length - 1] = {
-          ...newMessages[newMessages.length - 1],
-          text: responseText,
-          audioBase64: audioBase64,
-        };
-        return [userMessage, ...newMessages];
+        // Remove the "transcribing..." message and add user transcript + AI response
+        newMessages.pop();
+        return [...newMessages, userMessage, aiResponseMessage];
       });
 
       // Auto-play response audio
       if (audioBase64 && audioPlaybackRef.current) {
         const audioUrl = `data:audio/mp3;base64,${audioBase64}`;
         audioPlaybackRef.current.src = audioUrl;
-        audioPlaybackRef.current.play();
+        audioPlaybackRef.current.play().catch(() => {
+          console.log("Audio playback not available");
+        });
       }
     } catch (error) {
       console.error("Voice API Error:", error);
@@ -149,10 +160,20 @@ export function ChatInterface() {
     }
   };
 
-  // Handle text input
+  // Handle text input or pending voice input
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim() || isLoading) return;
+    if (isLoading) return;
+
+    // If there's pending audio, process it as voice input
+    if (pendingAudioBlob) {
+      await handleVoiceInput(pendingAudioBlob);
+      setPendingAudioBlob(null);
+      return;
+    }
+
+    // Otherwise, process text input
+    if (!input.trim()) return;
 
     const userMessage: Message = { id: Date.now(), text: input, sender: "user" };
     setMessages((prev) => [...prev, userMessage]);
@@ -255,35 +276,35 @@ export function ChatInterface() {
       </CardContent>
       <CardFooter>
         <form onSubmit={handleSend} className="flex w-full space-x-2">
-          <Input
-            type="text"
-            placeholder="Ask a question or use the microphone..."
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            disabled={isLoading || isRecording}
-          />
-          <Button
-            type="button"
-            variant={isRecording ? "destructive" : "default"}
-            onClick={isRecording ? stopRecording : startRecording}
-            disabled={isLoading}
-          >
-            {isRecording ? (
-              <>
-                <Square className="w-4 h-4 mr-2" />
-                Stop ({recordingTime}s)
-              </>
-            ) : (
-              <>
-                <Mic className="w-4 h-4 mr-2" />
-                Record
-              </>
-            )}
-          </Button>
-          <Button type="submit" disabled={isLoading || isRecording}>
-            Send
-          </Button>
-        </form>
+         <Input
+           type="text"
+           placeholder="Ask a question or use the microphone..."
+           value={input}
+           onChange={(e) => setInput(e.target.value)}
+           disabled={isLoading || isRecording || !!pendingAudioBlob}
+         />
+         <Button
+           type="button"
+           variant={isRecording ? "destructive" : "default"}
+           onClick={isRecording ? stopRecording : startRecording}
+           disabled={isLoading || !!pendingAudioBlob}
+         >
+           {isRecording ? (
+             <>
+               <Square className="w-4 h-4 mr-2" />
+               Stop ({recordingTime}s)
+             </>
+           ) : (
+             <>
+               <Mic className="w-4 h-4 mr-2" />
+               Record
+             </>
+           )}
+         </Button>
+         <Button type="submit" disabled={isLoading} variant={pendingAudioBlob ? "default" : "default"}>
+           {pendingAudioBlob ? "Send Recording" : "Send"}
+         </Button>
+       </form>
       </CardFooter>
     </Card>
   );

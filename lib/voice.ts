@@ -34,7 +34,6 @@ export async function speechToText(
 
   const config = {
     encoding: encoding,
-    sampleRateHertz: 16000,
     languageCode: "en-US",
     model: "latest_long",
   };

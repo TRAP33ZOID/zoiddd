@@ -19,7 +19,8 @@ export async function POST(req: Request) {
     const audioBuffer = Buffer.from(await audioBlob.arrayBuffer());
 
     // 2. Convert speech to text (STT)
-    const userQuery = await speechToText(audioBuffer, "LINEAR16");
+    // Browser records WebM/Opus at 48kHz
+    const userQuery = await speechToText(audioBuffer, "WEBM_OPUS");
     console.log("Transcribed query:", userQuery);
 
     // 3. Retrieve context using RAG
