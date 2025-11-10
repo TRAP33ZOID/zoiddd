@@ -40,7 +40,14 @@ export async function POST(req: Request) {
 
     const textResponse = response.text;
 
-    return NextResponse.json({ response: textResponse, context: contextChunks });
+    return NextResponse.json({
+      response: textResponse,
+      context: contextChunks,
+      usageMetadata: response.usageMetadata ? {
+        promptTokenCount: response.usageMetadata.promptTokenCount || 0,
+        candidatesTokenCount: response.usageMetadata.candidatesTokenCount || 0,
+      } : null
+    });
   } catch (error) {
     console.error("Chat API Error:", error);
     return NextResponse.json(

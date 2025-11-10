@@ -7,6 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Mic, Square, Volume2, Globe, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { getLanguageOptions, getDefaultLanguage } from "@/lib/language";
+import { costMonitor } from "@/lib/cost-monitor";
+
+// Storage keys for persistence
+const STORAGE_KEY = 'zoid_chat_messages';
+const LANGUAGE_STORAGE_KEY = 'zoid_preferred_language';
 
 interface Message {
   id: number;
@@ -46,6 +51,33 @@ export function ChatInterface() {
       }
     };
   }, []);
+
+  // Load messages and language preference from localStorage on mount
+  useEffect(() => {
+    const savedMessages = localStorage.getItem(STORAGE_KEY);
+    if (savedMessages) {
+      try {
+        setMessages(JSON.parse(savedMessages));
+      } catch (e) {
+        console.error('Failed to parse saved messages:', e);
+      }
+    }
+
+    const savedLanguage = localStorage.getItem(LANGUAGE_STORAGE_KEY);
+    if (savedLanguage) {
+      setCurrentLanguage(savedLanguage);
+    }
+  }, []);
+
+  // Save messages to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
+  }, [messages]);
+
+  // Save language preference to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem(LANGUAGE_STORAGE_KEY, currentLanguage);
+  }, [currentLanguage]);
 
   // Start recording audio
   const startRecording = async () => {
@@ -113,13 +145,28 @@ export function ChatInterface() {
       });
 
       if (!res.ok) {
-        throw new Error("Failed to process voice input");
+        const errorData = await res.json();
+        console.error("Voice API Error:", errorData);
+        throw new Error(errorData.hint || errorData.error || "Failed to process voice input");
       }
 
       const data = await res.json();
       const responseText = data.response || "Sorry, I couldn't process that.";
       const audioBase64 = data.audioBuffer;
       const transcript = data.transcript || "(No speech detected)";
+
+      // Track costs from voice response
+      if (data.costData) {
+        const { sttDuration, ttsCharacters, geminiMetadata } = data.costData;
+        if (geminiMetadata) {
+          costMonitor.trackGeminiTokens(
+            geminiMetadata.promptTokenCount,
+            geminiMetadata.candidatesTokenCount
+          );
+        }
+        costMonitor.trackSTT(sttDuration);
+        costMonitor.trackTTS(ttsCharacters);
+      }
 
       // Add user message with transcript
       const userMessage: Message = {
@@ -206,6 +253,14 @@ export function ChatInterface() {
 
       const data = await res.json();
       const responseText = data.response || "Sorry, I couldn't find an answer.";
+
+      // Track costs from chat response
+      if (data.usageMetadata) {
+        costMonitor.trackGeminiTokens(
+          data.usageMetadata.promptTokenCount || 0,
+          data.usageMetadata.candidatesTokenCount || 0
+        );
+      }
 
       setMessages((prev) => {
         const newMessages = [...prev];

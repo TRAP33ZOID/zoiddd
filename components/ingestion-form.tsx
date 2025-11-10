@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { documentRefreshEmitter } from "@/lib/document-context";
 
 export function IngestionForm() {
   const [text, setText] = useState("");
@@ -38,6 +39,9 @@ export function IngestionForm() {
         setStatus(`Ingestion Successful! ${data.count} chunks processed.`);
         setText("");
         setFilename("");
+        // Notify DocumentList to refresh
+        console.log("📝 [INGESTION-FORM] Emitting document refresh event");
+        documentRefreshEmitter.emit();
       }
     } catch (error) {
       console.error("Ingestion Error:", error);

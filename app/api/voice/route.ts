@@ -104,6 +104,14 @@ ${context}
       audioBuffer: audioResponseBuffer.toString("base64"),
       context: contextChunks,
       language: language,
+      costData: {
+        sttDuration: sttDuration,
+        ttsCharacters: aiResponse.length,
+        geminiMetadata: response.usageMetadata ? {
+          promptTokenCount: response.usageMetadata.promptTokenCount || 0,
+          candidatesTokenCount: response.usageMetadata.candidatesTokenCount || 0,
+        } : null
+      }
     });
   } catch (error: any) {
     const totalDuration = Date.now() - requestStartTime;
