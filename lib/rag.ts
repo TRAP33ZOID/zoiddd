@@ -1,5 +1,6 @@
 import { ai, EMBEDDING_MODEL } from "./gemini";
 import { supabase, DOCUMENTS_TABLE } from "./supabase";
+import { checkRAGCache, cacheRAGResults } from "./rag-cache";
 
 /**
  * Embeds a single text string using the Gemini embedding model.
@@ -27,16 +28,32 @@ async function embedText(text: string): Promise<number[]> {
  * @returns An array of relevant text chunks.
  */
 export async function retrieveContext(query: string, language: string, k: number = 2): Promise<string[]> {
+  // 0. Check cache first (target: <5ms)
+  const cacheStartTime = Date.now();
+  const cachedResults = checkRAGCache(query, language);
+  if (cachedResults) {
+    const cacheHitTime = Date.now() - cacheStartTime;
+    console.log(`  📦 Cache HIT: ${cacheHitTime}ms`);
+    return cachedResults;
+  }
+
   // 1. Embed the user query
+  const embedStartTime = Date.now();
   const queryVector = await embedText(query);
+  const embedTime = Date.now() - embedStartTime;
+  console.log(`  🔢 Embedding: ${embedTime}ms`);
 
   // 2. Perform vector similarity search in Supabase
+  const searchStartTime = Date.now();
   const { data: documents, error } = await supabase.rpc("match_documents", {
     query_embedding: queryVector,
     match_count: k,
     language, // Pass the language parameter for filtering
     filter: {}, // Optional filter for metadata
   }).select("content");
+
+  const searchTime = Date.now() - searchStartTime;
+  console.log(`  🔍 Vector Search: ${searchTime}ms`);
 
   if (error) {
     console.error("Supabase retrieval error:", error);
@@ -52,6 +69,9 @@ export async function retrieveContext(query: string, language: string, k: number
 
   // 3. Extract and return the content chunks
   const relevantChunks = relevantDocuments.map(doc => doc.content);
+
+  // 4. Cache results for future queries
+  cacheRAGResults(query, language, relevantChunks);
 
   return relevantChunks;
 }
