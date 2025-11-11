@@ -1,42 +1,115 @@
 # 🗺️ Zoid AI Voice Agent - Strategic Roadmap
 
-**Last Updated:** November 10, 2025
-**Current Status:** Phases 1-5 Complete ✅, Phase 6 IN PROGRESS
+**Last Updated:** November 11, 2025
+**Current Status:** Phases 1-5.6 Complete ✅ | **PATH 1 REFACTORING COMPLETE** ✅
+
+---
+
+## 🚨 CRITICAL: PRODUCT VISION CLARIFICATION (November 11, 2025)
+
+### ⚠️ MAJOR STRATEGIC PIVOT
+
+**Previous Understanding (INCORRECT):**
+- Building a web chatbot with voice features for customers
+- Customers visit website to chat with AI
+- Phone system was just "another channel"
+
+**CORRECTED Vision (PATH 1: PURE PHONE AGENT):**
+- This is a **phone-based customer support system**, NOT a web chatbot
+- Customers dial +1 (510) 370 5981, they do NOT visit a website
+- Web interface is **ONLY for admins** to monitor and manage the system
+- The web chat interface (ChatInterface) was a **prototype** for testing the AI engine
+
+### What This Means
+
+**Customer Experience:**
+```
+Customer → Dials +1 (510) 370 5981 → AI answers → Conversation → Hang up
+```
+No website. No app. Just phone calls.
+
+**Admin Experience:**
+```
+Admin → Opens https://your-domain.com → Views dashboard
+  ↓
+- Monitor live calls
+- Review call logs
+- Manage knowledge base
+- Track costs
+- Configure system
+```
+
+### Why This Matters
+
+Phases 1-4 were spent building a **web chatbot** that customers don't need. We built:
+- ❌ Voice recording in browser (customers call phone, not website)
+- ❌ Text chat interface (customers speak on phone)
+- ❌ Message persistence in localStorage (no web users to persist)
+
+Now in **Phase 5.5+**, we must:
+- ✅ Remove customer-facing web chat from landing page
+- ✅ Restructure UI to be admin-only
+- ✅ Redefine Phase 6-9 around phone operations, not web features
 
 ---
 
 ## 🎯 End Goal
 
-**Build an AI voice agent that receives customer calls and answers from a knowledge base.**
+**Build a production-ready AI phone agent that receives customer calls, answers from a knowledge base, and provides an admin dashboard for monitoring and management.**
 
-### What We Have (Phases 1-4 Complete)
-- ✅ Web-based chatbot with voice recording
-- ✅ RAG system with document retrieval
-- ✅ Speech-to-Text and Text-to-Speech
-- ✅ Bilingual support (English/Arabic)
-- ✅ Cost monitoring dashboard
-- ✅ Document management
-- ✅ Session persistence
+### Product Vision: Pure Phone Agent
 
-### What We Need (Phases 5-9)
-- ❌ Telephony infrastructure (can't receive phone calls)
-- ❌ Real-time streaming (<500ms latency)
-- ❌ Call routing and IVR
-- ❌ Multi-user sessions with database
-- ❌ Human handoff system
-- ❌ Tool use/function calling
-- ❌ Production hardening
+**Who Uses What:**
 
-### The Gap
+| User Type | Interface | Purpose |
+|-----------|-----------|---------|
+| **Customers** | Phone: +1 (510) 370 5981 | Call for support, ask questions |
+| **Admins** | Web Dashboard | Monitor calls, manage knowledge, track costs |
+| **Developers** | `/test/demo` route | Test AI responses internally |
+
+### Architecture
 
 ```
-Current Architecture:
-User Browser → Record Audio → Send Batch → Process → Return Audio
-⚠️ This is a CHATBOT, not a CALL AGENT
-
-Required Architecture:
-Phone Call → Telephony → Streaming STT ⇄ RAG ⇄ AI ⇄ Streaming TTS → Caller
-✅ This is what we need to build
+┌─────────────┐
+│  CUSTOMERS  │ ──► Dial +1 (510) 370 5981
+└─────────────┘
+       │
+       ▼
+┌──────────────────────────────────────────┐
+│           VAPI.ai Phone System           │
+│  • IVR (English/Arabic)                  │
+│  • Real-time STT/TTS                     │
+│  • <200ms response latency               │
+└──────────────────────────────────────────┘
+       │
+       ▼
+┌──────────────────────────────────────────┐
+│     Your Backend (Next.js API Routes)    │
+│  • /api/vapi-webhook (call handling)     │
+│  • /api/vapi-call-report (logging)       │
+│  • lib/rag.ts (knowledge retrieval)      │
+│  • lib/gemini.ts (AI responses)          │
+└──────────────────────────────────────────┘
+       │
+       ▼
+┌──────────────────────────────────────────┐
+│    Supabase (Data Persistence)           │
+│  • documents (knowledge base)            │
+│  • vapi_call_logs (call history)         │
+│  • vapi_call_messages (transcripts)      │
+└──────────────────────────────────────────┘
+       │
+       ▼
+┌─────────────┐
+│   ADMINS    │ ──► Open https://your-domain.com
+└─────────────┘       │
+                      ▼
+            ┌──────────────────┐
+            │  Admin Dashboard │
+            │  • Call logs     │
+            │  • Cost monitor  │
+            │  • Documents     │
+            └──────────────────┘
 ```
 
 ---
@@ -44,293 +117,319 @@ Phone Call → Telephony → Streaming STT ⇄ RAG ⇄ AI ⇄ Streaming TTS → 
 ## 📋 Completed Phases
 
 ### Phase 1: Core RAG Chat ✅
+**Purpose:** Build AI engine prototype
 - Gemini 2.5 Flash integration
-- RAG with simulated knowledge base
-- Text-based chat interface
-- Backend API routes
+- RAG with in-memory knowledge base
+- Text-based chat interface (prototype)
+
+**Note:** The chat interface was for testing the AI engine, not for end customers.
 
 ### Phase 2: Persistent Knowledge Base ✅
+**Purpose:** Add vector database for document retrieval
 - Supabase/pgvector integration
 - Document ingestion with embeddings
 - Vector storage and retrieval
 - Chunking strategy
 
 ### Phase 3: Voice Integration ✅
+**Purpose:** Add speech processing capabilities
 - Google Cloud Speech-to-Text
 - Google Cloud Text-to-Speech
-- Real-time audio recording
-- Audio playback controls
-- Full RAG integration
+- Audio pipeline testing
+- Full RAG + voice integration
+
+**Note:** Voice recording in browser was for prototyping before we had phone system.
 
 ### Phase 4: Arabic Language Support ✅
-- Bilingual UI (English/Arabic)
-- Language-aware RAG retrieval
+**Purpose:** Add bilingual support for MENA region
+- English/Arabic language support
 - RTL text rendering
 - Arabic STT/TTS
 - Sample knowledge bases
-- Dynamic system instructions
 - Cost monitoring dashboard
 - Document management UI
-- Session persistence (localStorage)
 
----
-
-## 🚀 Remaining Phases
-
-### Phase 5: Telephony Integration ✅ COMPLETE
-
-**Status:** ✅ DELIVERED - Live phone system operational
-
-**What Was Delivered:**
-- ✅ VAPI.ai integration with real phone number (+1 (510) 370 5981)
-- ✅ Live webhook handler streaming real-time calls
-- ✅ IVR language selection (1=English, 2=Arabic)
-- ✅ Call state management for multi-turn conversations
-- ✅ RAG cache optimization (<5ms cache hits)
-- ✅ Bearer token webhook authentication
-- ✅ Performance monitoring per call
+### Phase 5: Telephony Integration ✅
+**Purpose:** Deploy live phone system (THE ACTUAL PRODUCT)
+- VAPI.ai integration with real phone number (+1 (510) 370 5981)
+- Live webhook handler streaming real-time calls
+- IVR language selection (1=English, 2=Arabic)
+- Call state management for multi-turn conversations
+- RAG cache optimization (<5ms cache hits)
+- Bearer token webhook authentication
+- Performance monitoring per call
 
 **Performance Results:**
-- Response latency: <200ms (target achieved)
-- Cache hit rate: 50%+ on common queries
-- Real call verified: 42 seconds, $0.1208 cost
-- Success rate: 99%+
+- Response latency: <200ms ✅
+- Cache hit rate: 50%+ ✅
+- Real call verified: 42 seconds, $0.1208 cost ✅
+- Success rate: 99%+ ✅
 
-**Verified Success Criteria:**
-- ✅ Live phone number receives calls
-- ✅ IVR language selection works
-- ✅ AI responds in real-time
-- ✅ Response latency <500ms
-- ✅ English and Arabic both work
-- ✅ No dropped calls
+### Phase 5.5: Call Logs Dashboard ✅
+**Purpose:** Add admin monitoring capability
+- Database tables for call logs and messages
+- Webhook handler for end-of-call reports
+- Dashboard UI showing call history
+- Debug endpoint for testing
+- Cost integration
+
+**Status:** Infrastructure complete, needs VAPI dashboard configuration to receive webhook data.
 
 ---
 
-### Phase 6: Multi-User Sessions 🔜 NEXT
+## 🚀 PATH 1 REFACTORING (COMPLETE)
 
-**Goal:** Add database persistence for multi-user calls with history
+### Why Refactoring?
 
-**Key Features:**
-- User authentication (phone number based)
-- Database session storage
-- Conversation history retrieval
-- Session lifecycle management
-- Analytics dashboard
+The current UI shows a **customer chat interface** on the landing page, but customers don't use the website - they call the phone. The web interface should be **admin-only**.
 
-**Database Schema:**
-```sql
-CREATE TABLE users (
-  id UUID PRIMARY KEY,
-  phone_number VARCHAR(20) UNIQUE,
-  preferred_language VARCHAR(10),
-  created_at TIMESTAMP
-);
+### What Needs to Change
 
-CREATE TABLE chat_sessions (
-  id UUID PRIMARY KEY,
-  user_id UUID REFERENCES users(id),
-  started_at TIMESTAMP,
-  ended_at TIMESTAMP,
-  call_duration INT,
-  language VARCHAR(10)
-);
-
-CREATE TABLE chat_messages (
-  id UUID PRIMARY KEY,
-  session_id UUID REFERENCES chat_sessions(id),
-  role VARCHAR(10), -- 'user' or 'assistant'
-  content TEXT,
-  audio_url TEXT,
-  created_at TIMESTAMP
-);
+#### Current State (INCORRECT)
+```
+Landing page (/) shows:
+- IngestionForm ✅ (admin tool - correct)
+- DocumentList ✅ (admin tool - correct)
+- CostDashboard ✅ (admin tool - correct)
+- CallLogsDashboard ✅ (admin tool - correct)
+- ChatInterface ❌ (customer tool - WRONG, customers use phone)
 ```
 
-**Implementation:**
-- `lib/auth.ts` - Authentication helpers
-- `lib/session-manager.ts` - CRUD operations
-- Session list UI
-- History retrieval API
-- Analytics dashboard
-- Export functionality
+#### Target State (CORRECT)
+```
+Landing page (/) shows ONLY admin tools:
+- System Status Card (new: phone number status, uptime)
+- CallLogsDashboard (existing: primary view)
+- CostDashboard (existing)
+- DocumentList (existing)
+- IngestionForm (existing)
 
-**Deliverables:**
-- User registration system
-- Persistent conversation storage
-- Session history UI
-- Analytics and metrics
-- Export to PDF/JSON
+/test/demo shows internal testing tools:
+- ChatInterface (moved here for developer testing)
+- Debug tools
+```
+
+### Implementation Summary (Phase 5.6: UI Refactoring)
+
+**Status:** COMPLETE ✅
+
+**Changes Implemented:**
+- **Admin Dashboard:** The landing page (`/`) was restructured to be admin-only, featuring the new `<SystemStatusCard />` at the top, followed by Call Logs, Costs, Documents, and Ingestion tools.
+- **Customer UI Removed:** The customer-facing `<ChatInterface />` was removed from the landing page.
+- **Internal Testing Route:** The `<ChatInterface />` was moved to `/test` and `/test/demo` for internal developer testing and prototyping, with clear warning banners.
+- **System Status API:** A new API endpoint (`/api/system-status`) was created to provide real-time metrics for the dashboard.
+
+**Remaining Documentation Tasks (Priority 3):**
+- [ ] Update [`PROJECT_HANDOVER.md`](PROJECT_HANDOVER.md:55-58) - Clarify product goal
+- [ ] Update [`PROJECT_HANDOVER.md`](PROJECT_HANDOVER.md:336-360) - Fix architecture diagram
+- [ ] Update [`PROJECT_HANDOVER.md`](PROJECT_HANDOVER.md:560-596) - Correct Phase 6 definition
+- [ ] Update [`README.md`](README.md) - Clarify this is phone system, not web chat
+
+**Remaining Configuration Tasks (Priority 4):**
+- [ ] Configure VAPI dashboard to send webhooks (see PROJECT_HANDOVER.md Phase 5.5 section)
+- [ ] Test end-of-call-report endpoint
+- [ ] Verify call logs appear in dashboard
+
+### Files Modified
+
+| File | Action | Purpose |
+|------|--------|---------|
+| [`app/page.tsx`](app/page.tsx) | Modify | Remove ChatInterface, add SystemStatusCard |
+| `app/test/page.tsx` | Create | New route for internal testing |
+| `components/system-status-card.tsx` | Create | Show phone system health |
+| [`PROJECT_HANDOVER.md`](PROJECT_HANDOVER.md) | Update | Document vision clarification |
+| [`README.md`](README.md) | Update | Clarify product is phone agent |
+
+### Success Criteria (Phase 5.6)
+
+After refactoring:
+- [x] Landing page shows only admin tools
+- [x] Phone system status visible at top
+- [x] ChatInterface accessible at `/test` for internal use
+- [ ] Documentation accurately describes phone agent product (Pending Doc Update)
+- [x] Phase 6 correctly defined as "Human Handoff" not "Multi-user Sessions" (Confirmed in Handover)
 
 ---
 
-### Phase 7: Human Handoff System
+## 🔜 Remaining Phases (CORRECTED)
 
-**Goal:** Escalate complex queries to human agents
+### Phase 6: Human Handoff System 🎯 NEXT
+
+**Goal:** Allow AI to escalate complex calls to human agents
+
+**Why This Phase (Not Multi-User Sessions)?**
+- Customers call phone number, don't create web accounts
+- Phone number IS the user ID (caller ID)
+- Critical need: AI can't handle everything, needs human backup
+- Call logs already track history (Phase 5.5)
 
 **Key Features:**
 - Confidence scoring on AI responses
 - Automatic escalation triggers
-- Call transfer to human agents
-- Agent notification system
-- Context transfer with full history
-- Queue management
+- Call transfer to human agent queue
+- Agent notification system (SMS/Slack)
+- Context preservation (full conversation history)
+- Agent takeover UI in web dashboard
 
 **Escalation Triggers:**
-- Low confidence score (< 0.6)
-- User explicitly requests human agent
-- Multiple "I don't know" responses
-- Profanity or escalation detected
+```typescript
+// lib/escalation-triggers.ts
+- Confidence score < 0.6 (AI isn't confident)
+- User says "talk to a human" or "speak to manager"
+- Multiple "I don't know" responses (3+)
+- Profanity or escalation keywords detected
+- Call duration > 10 minutes (complex issue)
+```
 
-**Implementation:**
-- `lib/confidence-scorer.ts` - Score AI responses
-- `lib/escalation.ts` - Trigger logic
-- Call transfer API integration
-- Agent dashboard for takeover
-- Notification system (SMS/Slack)
-- Post-call notes capability
+**Database Schema:**
+```sql
+CREATE TABLE agent_users (
+  id UUID PRIMARY KEY,
+  name VARCHAR(100),
+  email VARCHAR(100),
+  phone_number VARCHAR(20),
+  status VARCHAR(20), -- 'available', 'busy', 'offline'
+  created_at TIMESTAMP
+);
+
+CREATE TABLE call_escalations (
+  id UUID PRIMARY KEY,
+  call_id VARCHAR(100) REFERENCES vapi_call_logs(call_id),
+  reason VARCHAR(200),
+  confidence_score FLOAT,
+  escalated_at TIMESTAMP,
+  agent_id UUID REFERENCES agent_users(id),
+  resolved_at TIMESTAMP,
+  resolution_notes TEXT
+);
+```
+
+**Implementation Files:**
+- `lib/confidence-scorer.ts` - Score AI responses (0-1 scale)
+- `lib/escalation-manager.ts` - Trigger logic & call transfer
+- `app/api/escalate/route.ts` - Escalation API endpoint
+- `components/agent-queue-dashboard.tsx` - Human agent UI
+- `lib/notification-service.ts` - SMS/Slack alerts
 
 **Deliverables:**
-- Confidence scoring system
-- Call transfer mechanism
-- Agent notification system
-- Handoff UI for human agents
-- Session export with context
+- [x] Confidence scoring integrated into webhook
+- [x] Agent queue management system
+- [x] Call transfer mechanism (VAPI API)
+- [x] Agent dashboard for takeover
+- [x] Notification system (SMS/email/Slack)
+- [ ] Post-call notes capability
+- [ ] Analytics: escalation rate, resolution time
+
+**Success Metrics:**
+- 95%+ escalation accuracy
+- <30 seconds average handoff time
+- 100% context transfer success
+- Agent satisfaction >4/5
 
 ---
 
-### Phase 8: Tool Use / Function Calling
+### Phase 7: CRM Integration & Tool Use
 
-**Goal:** Enable AI to call external functions and APIs
+**Goal:** Enable AI to access customer data and perform actions during calls
+
+**Why This Phase?**
+After human handoff works (Phase 6), we need the AI to be more useful by accessing real customer data.
 
 **Use Cases:**
-- **CRM Integration:** Look up customer data, update contact info
-- **Order Management:** Check order status, process returns
-- **Appointment Booking:** Check availability, schedule appointments
-- **Knowledge Base:** Flag incorrect information for review
+- **Customer Lookup:** "What's my account balance?" → Query CRM by phone number
+- **Order Status:** "Where's my order?" → Check order tracking system
+- **Appointment Booking:** "I want to schedule a visit" → Check calendar, book slot
+- **Ticket Creation:** "I have a problem" → Create support ticket in system
 
 **Implementation:**
 ```typescript
 // lib/tools.ts
 export const tools = {
+  lookupCustomer: {
+    name: "lookup_customer",
+    description: "Find customer by phone number",
+    parameters: { phone: "string" },
+    execute: async (params) => {
+      // Query CRM API
+      return customerData;
+    }
+  },
   checkOrderStatus: {
     name: "check_order_status",
     description: "Look up order by ID",
     parameters: { orderId: "string" },
-    execute: async (params) => { /* ... */ }
+    execute: async (params) => {
+      // Query order system
+      return orderStatus;
+    }
   },
-  // ... more tools
+  // ... 5-10 more tools
 };
 ```
 
 **Safety Features:**
-- User confirmation for actions
+- User confirmation before actions
 - Comprehensive audit logging
 - Rate limiting per tool
 - Parameter validation
 - Rollback capability
 
 **Deliverables:**
-- Tool registry system
-- Safe function executor
-- 5-10 basic tools
-- Audit logging system
-- User confirmation flow
+- [ ] Tool registry system with 5-10 basic tools
+- [ ] Safe function executor with confirmations
+- [ ] Audit logging database table
+- [ ] Tool usage dashboard for admins
+- [ ] Integration examples (mock CRM, order system)
 
 ---
 
-### Phase 9: Production Hardening
+### Phase 8: Production Hardening
 
 **Goal:** Production-ready, scalable, monitored system
 
 **Key Areas:**
 
-**1. Error Recovery**
-- Retry logic for API failures
-- Fallback responses
-- Graceful degradation
-- Circuit breakers
+1. **Error Recovery**
+   - Retry logic for API failures
+   - Fallback responses
+   - Circuit breakers
 
-**2. Rate Limiting**
-- Per-user call limits
-- IP-based throttling
-- API quota management
-- Cost caps and alerts
+2. **Rate Limiting**
+   - Per-caller limits (prevent abuse)
+   - API quota management
+   - Cost caps and alerts
 
-**3. Performance Optimization**
-- Response caching (Redis)
-- Database connection pooling
-- CDN for static assets
-- Lazy loading strategies
+3. **Monitoring & Alerting**
+   - Uptime monitoring (99.9% SLA)
+   - Error rate tracking
+   - Latency monitoring
+   - Cost alerts
+   - On-call rotation
 
-**4. Monitoring & Alerting**
-- Uptime monitoring (99.9% SLA target)
-- Error rate tracking
-- Latency monitoring
-- Cost alerts
-- On-call rotation setup
+4. **Security**
+   - DDoS protection
+   - Webhook signature verification
+   - Rate limiting
+   - Secrets management
 
-**5. Security Hardening**
-- DDoS protection
-- SQL injection prevention
-- XSS protection
-- HTTPS enforcement
-- Secrets management (Vault/AWS Secrets)
+5. **CI/CD Pipeline**
+   - Automated tests
+   - Staging deployment
+   - Blue-green production deployment
 
-**6. CI/CD Pipeline**
-```yaml
-# .github/workflows/ci-cd.yml
-- Run tests
-- Lint code
-- Build Docker image
-- Deploy to staging
-- Run integration tests
-- Blue-green production deployment
-```
-
-**7. Load Testing**
-- Simulate 100+ concurrent calls
-- Database stress testing
-- API performance testing
-- Failover testing
+6. **Load Testing**
+   - Simulate 100+ concurrent calls
+   - Database stress testing
+   - Failover testing
 
 **Deliverables:**
-- Comprehensive error handling
-- Rate limiting middleware
-- Monitoring dashboard (Datadog/Grafana)
-- CI/CD pipeline
-- Load test results
-- Security audit report
-- Deployment playbook
-- Operations runbook
-
----
-
-## 🌍 MENA-Specific Considerations
-
-### Language Requirements
-
-**Current (Phase 4):**
-- ✅ Modern Standard Arabic (MSA)
-- ✅ English
-
-**Future:**
-- Egyptian Arabic
-- Gulf Arabic (Khaleeji)
-- Levantine Arabic
-- Maghrebi Arabic
-
-**Recommendation:** Use Whisper API for better dialect support once stable.
-
-### Infrastructure
-
-**Recommended Hosting:**
-- AWS UAE (Middle East - Bahrain) region
-- Or AWS EU (Frankfurt) for GDPR compliance
-- Target: <100ms latency from MENA
-
-**Phone Numbers:**
-- Local providers: du, Etisalat (UAE)
-- Saudi Telecom Company (KSA)
-- Verify regional support with chosen telephony platform
+- [ ] Comprehensive error handling
+- [ ] Rate limiting middleware
+- [ ] Monitoring dashboard (Datadog/Grafana)
+- [ ] CI/CD pipeline
+- [ ] Load test results
+- [ ] Security audit report
+- [ ] Operations runbook
 
 ---
 
@@ -341,66 +440,48 @@ export const tools = {
 - Google Cloud STT: ~$480/month
 - Google Cloud TTS: ~$2,280/month
 - Supabase: ~$25/month
-- **Subtotal:** ~$2,815/month
+- VAPI: ~$50-90/month
+- **Total:** ~$2,865/month
 
-### Additional Costs (Post-Phase 5)
-- Telephony platform: $50-90/month per 1000 calls
-- Phone numbers: $1-5/month per number
-- **Total Estimated:** ~$3,000/month for 1000 calls/day
-
-### Cost Monitoring
-- ✅ Real-time tracking implemented (Phase 4)
-- ✅ Dashboard showing usage
-- ✅ Per-request cost breakdown
-- 🔜 Alert system (Phase 9)
-- 🔜 Budget caps (Phase 9)
+### Cost Optimization
+- ✅ Caching implemented (reduces 30-50%)
+- ✅ Gemini Flash (most cost-effective model)
+- 🔜 Response caching (Phase 8)
+- 🔜 Cost alerts (Phase 8)
 
 ---
 
-### Phase 5 (Telephony) ✅ COMPLETE
-- [x] Live phone number operational (+1 (510) 370 5981)
-- [x] <500ms response latency (achieved <200ms)
-- [x] 0% dropped calls
-- [x] 99%+ IVR success rate
-- [x] English and Arabic both working
+## 🌍 MENA-Specific Considerations
 
-### Phase 6 (Multi-User)
-- [ ] 1000+ concurrent users supported
-- [ ] <200ms session retrieval
-- [ ] 99.9% data persistence
-- [ ] Analytics dashboard operational
+### Language Support
+- ✅ Modern Standard Arabic (MSA)
+- ✅ English
+- 🔜 Egyptian Arabic (future)
+- 🔜 Gulf Arabic (future)
 
-### Phase 7 (Human Handoff)
-- [ ] 95% escalation accuracy
-- [ ] <30s average handoff time
-- [ ] 100% context transfer success
-- [ ] Agent satisfaction >4/5
+### Infrastructure
+**Recommended Hosting:**
+- AWS UAE (Middle East - Bahrain)
+- Or AWS EU (Frankfurt) for GDPR
+- Target: <100ms latency from MENA
 
-### Phase 8 (Tool Use)
-- [ ] 5+ tools integrated
-- [ ] 99% execution success rate
-- [ ] 100% audit coverage
-- [ ] 0 unauthorized actions
-
-### Phase 9 (Production)
-- [ ] 99.9% uptime achieved
-- [ ] <500ms p95 latency
-- [ ] 0 security incidents
-- [ ] CI/CD pipeline operational
+**Phone Numbers:**
+- Current: +1 (510) 370 5981 (US)
+- Future: Local MENA numbers via du, Etisalat, STC
 
 ---
 
 ## 🚀 Launch Readiness Checklist
 
 ### Technical Requirements
-- [x] All bugs fixed (Phase 4) ✅
-- [x] Phone calls working (Phase 5) ✅
-- [ ] Multi-user support (Phase 6) - STARTING
-- [ ] Human handoff ready (Phase 7)
-- [ ] Production hardened (Phase 9)
+- [x] Phone system operational ✅
+- [x] Call logs infrastructure ✅
+- [ ] UI refactored to admin-only (PATH 1 refactoring)
+- [ ] Human handoff ready (Phase 6)
+- [ ] CRM integration (Phase 7)
+- [ ] Production hardened (Phase 8)
 - [ ] Load tested (100 concurrent calls)
 - [ ] Security audit passed
-- [ ] Monitoring configured
 
 ### Business Requirements
 - [ ] Phone numbers provisioned
@@ -408,50 +489,12 @@ export const tools = {
 - [ ] Escalation procedures documented
 - [ ] SLA agreements in place
 - [ ] Cost budget approved
-- [ ] Legal compliance verified
-
-### MENA-Specific
-- [ ] Local phone numbers acquired
-- [ ] Arabic voice quality validated
-- [ ] Cultural customizations implemented
-- [ ] Data residency confirmed
-- [ ] Local support team ready
-
----
-
-## 📚 Key Resources
-
-### Telephony Platforms
-- [VAPI.ai Documentation](https://docs.vapi.ai)
-- [Retell AI Documentation](https://docs.retellai.com)
-- [Twilio Voice API](https://www.twilio.com/docs/voice)
-- [Bland.ai API](https://docs.bland.ai)
-
-### Voice Services
-- [Google Cloud Speech-to-Text](https://cloud.google.com/speech-to-text)
-- [Google Cloud Text-to-Speech](https://cloud.google.com/text-to-speech)
-- [ElevenLabs API](https://elevenlabs.io/docs)
-- [Deepgram STT](https://deepgram.com/docs)
-
-### AI & RAG
-- [Gemini API Documentation](https://ai.google.dev/docs)
-- [Supabase Vector Guide](https://supabase.com/docs/guides/ai)
-- [LangChain Documentation](https://js.langchain.com/docs)
-
-### MENA Resources
-- [Arabic NLP Tools](https://github.com/CAMeL-Lab/camel_tools)
-- [Arabic Voice Datasets](https://www.openslr.org/46/)
-- [MENA Data Residency Guide](https://aws.amazon.com/compliance/data-residency/)
 
 ---
 
 **End of Strategic Roadmap**
 
-*This roadmap provides the strategic direction for building a production-ready AI voice agent. Follow phases sequentially for best results.*
-
 **For detailed implementation guidance, see [`PROJECT_HANDOVER.md`](PROJECT_HANDOVER.md:1)**
 
----
-
-**Last Updated:** November 10, 2025
-**Status:** Phases 1-4 Complete, Ready for Phase 5
+**Last Updated:** November 11, 2025
+**Status:** Phases 1-5.5 Complete, PATH 1 Refactoring In Progress

@@ -178,3 +178,56 @@ COMMENT ON TABLE vapi_call_logs IS 'Stores comprehensive data for all VAPI.ai ph
 COMMENT ON TABLE vapi_call_messages IS 'Stores individual messages/turns within each call';
 COMMENT ON COLUMN vapi_call_logs.raw_data IS 'Full JSON payload from VAPI for debugging';
 COMMENT ON COLUMN vapi_call_logs.summary IS 'AI-generated summary of the call';
+
+-- ============================================
+-- Phase 6: Human Handoff System Schema
+-- ============================================
+
+-- Agent Users Table - Stores human agent information
+CREATE TABLE IF NOT EXISTS agent_users (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name VARCHAR(100) NOT NULL,
+  email VARCHAR(100) UNIQUE NOT NULL,
+  phone_number VARCHAR(20),
+  status VARCHAR(20) DEFAULT 'offline', -- 'available', 'busy', 'offline'
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Call Escalations Table - Stores records of calls escalated to human agents
+CREATE TABLE IF NOT EXISTS call_escalations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  call_id VARCHAR(100) REFERENCES vapi_call_logs(call_id),
+  reason VARCHAR(200) NOT NULL,
+  confidence_score FLOAT,
+  escalated_at TIMESTAMPTZ DEFAULT NOW(),
+  agent_id UUID REFERENCES agent_users(id),
+  resolved_at TIMESTAMPTZ,
+  resolution_notes TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Indexes for performance
+CREATE INDEX IF NOT EXISTS idx_escalations_call_id ON call_escalations(call_id);
+CREATE INDEX IF NOT EXISTS idx_escalations_agent_id ON call_escalations(agent_id);
+CREATE INDEX IF NOT EXISTS idx_agent_users_status ON agent_users(status);
+
+-- Enable Row Level Security for new tables
+ALTER TABLE agent_users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE call_escalations ENABLE ROW LEVEL SECURITY;
+
+-- Create policies for service role (full access)
+CREATE POLICY "Service role has full access to agent users"
+  ON agent_users
+  FOR ALL
+  USING (true);
+
+CREATE POLICY "Service role has full access to call escalations"
+  ON call_escalations
+  FOR ALL
+  USING (true);
+
+-- Comments for documentation
+COMMENT ON TABLE agent_users IS 'Stores information about human agents available for call handoff.';
+COMMENT ON TABLE call_escalations IS 'Tracks calls that have been escalated from the AI to a human agent.';

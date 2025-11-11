@@ -201,6 +201,24 @@ export async function getCallDetails(callId: string): Promise<VAPICall | null> {
 }
 
 /**
+ * Transfer an active VAPI call to a new destination number.
+ * @param callId The ID of the active call to transfer.
+ * @param destinationNumber The phone number to transfer the call to.
+ */
+export async function transferCall(callId: string, destinationNumber: string): Promise<boolean> {
+  try {
+    await vapiApiCall(`/calls/${callId}/transfer`, "POST", {
+      destination: destinationNumber,
+    });
+    console.log(`✅ Transferred call ${callId} to ${destinationNumber}`);
+    return true;
+  } catch (error) {
+    console.error(`Error transferring call ${callId}:`, error);
+    return false;
+  }
+}
+
+/**
  * Test webhook connection
  */
 export async function testWebhookConnection(testCallId: string = "test_123"): Promise<boolean> {

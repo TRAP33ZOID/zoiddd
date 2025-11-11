@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
-import { ai, CHAT_MODEL } from "@/lib/gemini";
+import { ai, CHAT_MODEL, generateStructuredContent, StructuredResponse } from "@/lib/gemini";
 import { retrieveContext } from "@/lib/rag";
 import { getSystemInstruction, isValidLanguage, getDefaultLanguage } from "@/lib/language";
+import { checkEscalationRequired, escalateCall } from "@/lib/escalation-manager";
 
 /**
  * VAPI Webhook Handler
@@ -42,6 +43,7 @@ interface VAPIResponse {
   language: string;
   context?: string[];
   isFinal?: boolean;
+  transfer?: boolean; // Added for Phase 6 escalation
   timestamp: number;
 }
 
@@ -198,30 +200,64 @@ async function handleUserTranscription(
     const baseSystemInstruction = getSystemInstruction(language);
     
     const systemInstruction = `${baseSystemInstruction}
-
-CONTEXT:
----
-${context}
----
-
-IMPORTANT: Keep your response concise for phone conversations. Maximum 2-3 sentences.`;
+ 
+ CONTEXT:
+ ---
+ ${context}
+ ---
+ 
+ IMPORTANT: Keep your response concise for phone conversations. Maximum 2-3 sentences.
+ 
+ RESPONSE FORMAT: You MUST respond with a single JSON object matching the StructuredResponse schema.`;
     
-    const response = await ai.models.generateContent({
-      model: CHAT_MODEL,
-      contents: [
-        ...state.messages.map(msg => ({
-          role: msg.role as "user" | "assistant",
-          parts: [{ text: msg.content }]
-        }))
-      ],
-      config: {
-        systemInstruction: systemInstruction,
-      },
-    });
+    const structuredResponse: StructuredResponse = await generateStructuredContent(
+      state.messages.map(msg => ({
+        role: msg.role as "user" | "assistant",
+        parts: [{ text: msg.content }]
+      })),
+      systemInstruction
+    );
     
-    const aiResponse = response.text || "I'm sorry, I couldn't generate a response. Please try again.";
+    const aiResponse = structuredResponse.response;
+    const confidenceScore = structuredResponse.confidence_score;
     const aiDuration = Date.now() - aiStartTime;
+    
     console.log(`  🤖 AI generation: ${aiDuration}ms`);
+    console.log(`  📊 Confidence Score: ${confidenceScore.toFixed(2)}`);
+    
+    // Step 4: Check for Escalation
+    const escalationTrigger = checkEscalationRequired(
+      callId,
+      userMessage,
+      confidenceScore
+    );
+    
+    if (escalationTrigger) {
+      const transferInitiated = await escalateCall(callId, escalationTrigger);
+      
+      if (transferInitiated) {
+        // VAPI expects a response to play while the transfer is happening
+        return NextResponse.json({
+          status: "ok",
+          response: "I am transferring you to a human agent now. Please hold.",
+          language, // Added language
+          isFinal: true,
+          transfer: true,
+          timestamp: Date.now(),
+        } as VAPIResponse);
+      } else {
+        // Failed to escalate (e.g., no agents available)
+        return NextResponse.json({
+          status: "ok",
+          response: "I apologize, but all human agents are currently busy. Please try calling back later.",
+          language, // Added language
+          isFinal: true,
+          timestamp: Date.now(),
+        } as VAPIResponse);
+      }
+    }
+    
+    // Step 5: Normal Response Flow
     
     // Store AI response in history
     state.messages.push({ role: "assistant", content: aiResponse });
@@ -245,6 +281,7 @@ IMPORTANT: Keep your response concise for phone conversations. Maximum 2-3 sente
         ragMs: ragDuration,
         aiMs: aiDuration,
         totalMs: totalDuration,
+        confidence: confidenceScore,
       },
       timestamp: Date.now(),
     } as VAPIResponse);

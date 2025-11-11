@@ -1,19 +1,24 @@
- # 🎙️ Zoid AI Support Agent
+# 🎙️ Zoid AI Phone Agent
 
-A production-ready, bilingual (English/Arabic) voice-enabled AI customer support agent built with Next.js, featuring real-time speech interaction and RAG-powered knowledge retrieval.
+A production-ready, bilingual (English/Arabic) **phone-based customer support system** built with Next.js. Customers call a live phone number to speak with an AI agent powered by RAG and real-time speech processing.
+
+**This is a PHONE AGENT, not a web chatbot.** Customers dial +1 (510) 370 5981; they do not visit a website. The web interface is for admins only.
 
 ## ✨ Features
 
-- 📞 **Real-time Phone System**: Live phone line (+1 (510) 370 5981) with IVR language selection
-- 🗣️ **Voice Interaction**: Speech-to-Text and Text-to-Speech using Google Cloud APIs
-- 🌍 **Bilingual Support**: Full English and Modern Standard Arabic (ar-SA) support
-- 📚 **RAG-Powered Knowledge Base**: Vector-based document retrieval using Supabase pgvector
-- 🎯 **Language-Aware Retrieval**: Automatic language filtering for context accuracy
-- 📝 **Text & Voice Chat**: Seamless switching between text and voice input
-- 🔄 **RTL Support**: Right-to-left text rendering for Arabic
-- 📊 **Call Logs Dashboard**: Track all phone calls with transcripts, costs, and analytics
+**Customer Experience (Phone):**
+- 📞 **Live Phone System**: Customers call +1 (510) 370 5981 to reach the AI agent
+- 🗣️ **Real-time Voice Processing**: Speech-to-Text and Text-to-Speech using Google Cloud APIs
+- 🌍 **Bilingual Support**: Full English and Modern Standard Arabic (ar-SA) with IVR language selection
+- 🎯 **RAG-Powered Responses**: Real-time knowledge retrieval from your knowledge base
+- ⚡ **Low Latency**: <200ms response time per turn for seamless conversation
+
+**Admin Experience (Web Dashboard):**
+- 📊 **System Status Card**: Monitor phone number health, uptime, and metrics
+- 📞 **Call Logs Dashboard**: Track all phone calls with transcripts, costs, and analytics
 - 💰 **Cost Monitoring**: Real-time tracking of AI/voice service costs
-- ⚡ **Real-time Streaming**: Low-latency (<200ms) streaming audio pipeline for phone calls
+- 📚 **Knowledge Base Manager**: Upload, organize, and manage documents
+- 🔐 **Admin-Only Interface**: Secure dashboard for system management
 
 ## 🛠️ Tech Stack
 
@@ -243,10 +248,12 @@ zoiddd/
 │   │   └── ingest/        # Document ingestion endpoint
 │   ├── globals.css        # Global styles
 │   ├── layout.tsx         # Root layout
-│   └── page.tsx           # Home page
+│   ├── page.tsx           # Admin dashboard (home)
+│   └── test/              # Internal testing routes
 ├── components/
-│   ├── chat-interface.tsx # Main chat UI component
-│   ├── ingestion-form.tsx # Document upload component
+│   ├── chat-interface.tsx # Web chat UI (for testing)
+│   ├── system-status-card.tsx # Phone system status (NEW)
+│   ├── ingestion-form.tsx # Document upload
 │   └── ui/                # shadcn/ui components
 ├── lib/
 │   ├── gemini.ts                  # Gemini AI client
@@ -261,22 +268,6 @@ zoiddd/
 │   ├── vapi-ivr-config.ts         # IVR configuration (Phase 5)
 │   ├── rag-cache.ts               # Response caching (Phase 5)
 │   └── google-cloud-key.json      # (YOU MUST CREATE THIS)
-├── app/api/
-│   ├── chat/                      # Text chat endpoint
-│   ├── voice/                     # Voice interaction endpoint
-│   ├── ingest/                    # Document ingestion endpoint
-│   ├── documents/                 # Document management
-│   ├── vapi-webhook/              # Streaming webhook handler (Phase 5)
-│   ├── vapi-call-report/          # End-of-call webhook (Phase 5.5)
-│   ├── call-logs/                 # Call history API (Phase 5.5)
-│   └── admin/vapi-setup/          # VAPI configuration (Phase 5)
-├── components/
-│   ├── chat-interface.tsx         # Main chat UI
-│   ├── ingestion-form.tsx         # Document upload
-│   ├── document-list.tsx          # Document management
-│   ├── cost-dashboard.tsx         # Cost monitoring
-│   ├── call-logs-dashboard.tsx    # Call logs UI (Phase 5.5)
-│   └── ui/                        # shadcn/ui components
 ├── supabase/
 │   └── schema.sql                 # Complete database schema
 ├── knowledge-bases/       # Sample knowledge base files
@@ -308,49 +299,49 @@ zoiddd/
 
 ## 🎯 Usage
 
-### Text Chat
-1. Select language (English | العربية) from dropdown
-2. Type your message in the input field
-3. Press "Send" or Enter
+### For Customers: Phone System
+1. **Call:** +1 (510) 370 5981 from any phone
+2. **Select Language:** Press 1 for English, 2 for العربية
+3. **Ask Questions:** Speak naturally to the AI agent
+4. **Get Responses:** Receive instant answers from the knowledge base
+5. **Hang Up:** End the call when done
 
-### Voice Chat (Web Interface)
-1. Select your preferred language (English | العربية)
-2. Click the "Record" button
-3. Speak your question clearly
-4. Click "Send Recording"
-5. The AI will respond with both text and audio
+### For Admins: Web Dashboard
 
-**Note:** For phone calls, use the Live Phone System above instead.
+**View System Status (Landing Page):**
+1. Open https://your-domain.com
+2. See phone number, uptime, call volume, and latency metrics
+3. Review call logs with transcripts and costs
+4. Monitor system health in real-time
 
-### IVR Language Selection (Phone System)
-When calling +1 (510) 370 5981:
-- Press **1** for English with English-language knowledge base
-- Press **2** for العربية with Arabic-language knowledge base
+**Manage Knowledge Base:**
+1. Navigate to "Documents" section
+2. Upload `.txt`, `.pdf`, or `.docx` files
+3. Select language (English or Arabic)
+4. System automatically processes and stores content
 
-### Document Ingestion
-1. Navigate to the ingestion page
-2. Select language (en-US or ar-SA)
-3. Upload a `.txt`, `.pdf`, or `.docx` file
-4. The system will process and store the content
+**For Internal Testing Only:**
+- Access `/test` or `/test/demo` routes to test the chat interface
+- This is for developer testing, not customer use
+- Warning banner clarifies internal use only
 
 ## 📚 Documentation
 
 - **[PROJECT_HANDOVER.md](PROJECT_HANDOVER.md)** - Comprehensive technical documentation including:
-  - Complete development history (Phases 1-5 complete)
+  - Complete development history (Phases 1-5.6 complete)
   - Phase 5 telephony implementation details
+  - Phase 5.6 UI refactoring (current)
   - VAPI.ai integration reference
-  - Phase 6 multi-user session design
+  - Phase 6-9 roadmap
   - Architecture decisions and system dependencies
   - Known constraints and workarounds
-  - Future roadmap (Phases 6-9)
   - Testing protocols and performance benchmarks
 
 - **[ROADMAP.md](ROADMAP.md)** - Strategic roadmap including:
   - Phase completion status
-  - Phase 6 multi-user sessions (current)
-  - Phase 7 human handoff system
-  - Phase 8 tool use / function calling
-  - Phase 9 production hardening
+  - Phase 5.6 UI refactoring (current)
+  - Phase 6 human handoff system (next)
+  - Phase 7-9 upcoming features
   - Cost considerations and MENA-specific guidance
 
 ## 🔐 Security Notes
@@ -372,9 +363,9 @@ These are already in `.gitignore`, but always double-check before committing.
 
 **Quick Debug Steps:**
 1. Make a test call to +1 (510) 370 5981
-2. Check terminal logs for "📞 End-of-call report received"
+2. Check terminal logs for "📊 [VAPI] End-of-Call Report Received"
 3. If not present → VAPI configuration issue
-4. If present but no "✅ Call log saved" → database/API issue
+4. If present but no "✅ Call log stored" → database/API issue
 
 **Temporary Workaround:** Phone system works perfectly without dashboard. Call logs are a monitoring feature, not required for core functionality.
 
@@ -398,22 +389,22 @@ These are already in `.gitignore`, but always double-check before committing.
 
 ### Web Interface Issues
 
-### Microphone Not Working
+**Microphone Not Working**
 - Check browser permissions (Settings → Privacy → Microphone)
 - Try a different browser (Chrome/Firefox recommended)
 - Ensure no other app is using the microphone
 
-### STT/TTS Errors
+**STT/TTS Errors**
 - Verify Google Cloud credentials are correct
 - Check that APIs are enabled in Google Cloud Console
 - Review server logs for detailed error messages
 
-### RAG Not Retrieving Context
+**RAG Not Retrieving Context**
 - Ensure documents are uploaded with correct language tag
 - Verify Supabase `match_documents()` function exists
 - Check that knowledge base has content for the selected language
 
-### Database Connection Issues
+**Database Connection Issues**
 - Verify Supabase URL and keys in `.env.local`
 - Check that the `documents` table exists
 - Ensure pgvector extension is enabled
@@ -424,47 +415,45 @@ These are already in `.gitignore`, but always double-check before committing.
 - ✅ Phase 1: Core RAG Chat Implementation
 - ✅ Phase 2: Persistent Knowledge Base & Ingestion
 - ✅ Phase 3: Voice Integration
-- ✅ Phase 4: Arabic Language Support (VERIFIED)
-- ✅ Phase 5: Telephony Integration (COMPLETE - Live phone system operational)
-- 🟡 Phase 5.5: Call Logs Dashboard (TROUBLESHOOTING - Infrastructure complete, data not flowing - see [`PROJECT_HANDOVER.md`](PROJECT_HANDOVER.md:101))
+- ✅ Phase 4: Arabic Language Support
+- ✅ Phase 5: Telephony Integration (Live phone system operational)
+- ✅ Phase 5.5: Call Logs Dashboard Infrastructure
+- ✅ **Phase 5.6: UI Refactoring (Admin-Only Dashboard)** - JUST COMPLETED
 
 ### 🚧 Current & Future Phases
-- 🔧 **Phase 5.5: Call Logs Dashboard** (TROUBLESHOOTING)
-  - All infrastructure built and deployed
-  - Issue: VAPI not sending end-of-call reports
-  - See [`TROUBLESHOOTING_CALL_LOGS.md`](TROUBLESHOOTING_CALL_LOGS.md) for debugging
-  
-- 🚧 **Phase 6: Multi-User Sessions** (NEXT)
-  - User authentication (phone number based)
-  - Session persistence in database
-  - Conversation history retrieval
-  - Analytics dashboard
-  - See [`PROJECT_HANDOVER.md`](PROJECT_HANDOVER.md:175) for details
+- 🔜 **Phase 6: Human Handoff System** (NEXT)
+  - AI confidence scoring
+  - Automatic escalation triggers
+  - Call transfer to human agents
+  - Agent queue management
+  - See [`ROADMAP.md`](ROADMAP.md:560) for details
 
-- 🚧 Phase 7: Human Handoff System (Planned)
-- 🚧 Phase 8: Tool Use / Function Calling (Planned)
-- 🚧 Phase 9: Production Hardening (Planned)
+- 🔜 Phase 7: CRM Integration & Tool Use
+- 🔜 Phase 8: Production Hardening
+- 🔜 Phase 9+ Future Enhancements
 
 For complete roadmap details, see [`ROADMAP.md`](ROADMAP.md)
 
 ## 🔗 Next Steps
 
-**For Call Logs Dashboard Fix (Phase 5.5):**
-1. Read [`PROJECT_HANDOVER.md`](PROJECT_HANDOVER.md:101) (Phase 5.5 section) for complete debugging guide
+**Phase 5.6 Completion Verification:**
+1. Run `npm run dev`
+2. Open http://localhost:3000 - See admin dashboard with system status card
+3. Open http://localhost:3000/test - See chat interface with warning banner
+4. Verify phone number (+1 (510) 370 5981) is displayed prominently
+
+**For Phase 6 Implementation:**
+1. Review human handoff architecture in [`ROADMAP.md`](ROADMAP.md:560)
+2. Design confidence scoring system
+3. Plan escalation triggers and logic
+4. Implement call transfer mechanism
+5. Build agent queue dashboard
+
+**For Call Logs Dashboard Fix (Optional Phase 5.5 Continuation):**
+1. Read [`PROJECT_HANDOVER.md`](PROJECT_HANDOVER.md:101) (Phase 5.5 section)
 2. Check VAPI dashboard for end-of-call-report configuration
 3. Test webhook with manual curl commands
 4. Verify database tables and permissions
-
-**For Phase 6 Implementation:**
-1. Review multi-user session design in [`PROJECT_HANDOVER.md`](PROJECT_HANDOVER.md:175)
-2. Create database tables for users, sessions, and messages
-3. Implement authentication middleware
-4. Build session management APIs
-5. Update UI to support user login and history
-
-**For Detailed Setup of Phase 5:**
-- See [`PROJECT_HANDOVER.md`](PROJECT_HANDOVER.md:299) for VAPI Configuration Reference
-- See lines 170-204 of this file (README.md) for call logs database setup SQL
 
 ---
 
@@ -483,3 +472,4 @@ For complete roadmap details, see [`ROADMAP.md`](ROADMAP.md)
 ---
 
 **Built with ❤️ for the MENA region**
+**Status:** Phase 5.6 Complete ✅ | Phase 6 Next 🔜

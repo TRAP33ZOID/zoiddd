@@ -2,7 +2,7 @@
 
 **Version:** 6.1
 **Last Updated:** November 11, 2025, 06:12 UTC
-**Current Phase:** Phase 5 Complete ✅ | Phase 5.5 Complete ✅ | Phase 6 NEXT
+**Current Phase:** Phase 5.6 Complete ✅ | Phase 6 NEXT
 **Status:** 🟢 OPERATIONAL - Live Phone System Active + Call Logs Infrastructure Verified
 
 ---
@@ -32,29 +32,423 @@ All additional documentation must be incorporated into one of these 3 files. Do 
 
 ---
 
-## 📋 Quick Start for New Agent
+## 🚨 PATH 1 REFACTORING: PRODUCT VISION CLARIFICATION
 
-**Current Status:** Phases 1-5 complete. Phase 5.5 complete and tested. Phase 6 ready to start.
+**Date:** November 11, 2025
+**Status:** 🔄 IN PROGRESS
+**Priority:** 🔴 CRITICAL - Must complete before Phase 6
 
-**What Works:**
-- ✅ Web-based chatbot with voice recording (English/Arabic)
-- ✅ RAG system with vector search (Supabase + pgvector)
-- ✅ Speech-to-Text and Text-to-Speech (Google Cloud)
-- ✅ Bilingual support (English/Arabic)
-- ✅ Live phone system: +1 (510) 370 5981 (VAPI.ai)
-- ✅ Real-time streaming audio pipeline (<200ms latency)
-- ✅ IVR language selection
-- ✅ Cost monitoring dashboard
-- ✅ Document management (upload/list/delete)
+### The Problem
 
-**What Needs Attention:**
-- ⏳ Phase 6: Multi-user sessions with database persistence (ready to start)
+The project has a **fundamental disconnect** between stated goals and implementation:
+
+**Stated Goal (from project start):**
+> "Build a production-ready AI voice agent that **receives phone calls**"
+
+**What Was Built (Phases 1-4):**
+> A web-based chatbot where customers visit a website and chat with voice recording
+
+**The Gap:**
+- Customers should call **+1 (510) 370 5981**, NOT visit a website
+- The web interface should be **admin-only**, NOT customer-facing
+- ChatInterface component was a **prototype** for testing AI engine, NOT the product
+
+### Path 1: Pure Phone Agent (CHOSEN STRATEGY)
+
+**Product Definition:**
+This is a **phone-based customer support system**. Customers dial a phone number. Admins use a web dashboard to monitor and manage.
+
+**Who Uses What:**
+
+| User Type | Interface | Actions |
+|-----------|-----------|---------|
+| **Customers** | Phone: +1 (510) 370 5981 | Call for support, ask questions |
+| **Admins** | Web: https://your-domain.com | Monitor calls, manage knowledge base |
+| **Developers** | Web: /test/demo | Test AI responses internally |
+
+**Architecture:**
+```
+CUSTOMERS ──► Phone Call ──► VAPI.ai ──► Your Backend ──► Supabase
+                                              │
+ADMINS ──► Web Dashboard ◄──────────────────┘
+```
+
+### What Needs to Change
+
+#### Current Landing Page (INCORRECT)
+```typescript
+// app/page.tsx - Current state
+<IngestionForm />       // ✅ Admin tool
+<DocumentList />        // ✅ Admin tool
+<CostDashboard />       // ✅ Admin tool
+<CallLogsDashboard />   // ✅ Admin tool
+<ChatInterface />       // ❌ CUSTOMER tool (wrong!)
+```
+
+**Problem:** Mixing admin tools with customer interface. Customers don't use the website!
+
+#### Target Landing Page (CORRECT)
+```typescript
+// app/page.tsx - Target state
+<h1>Phone Agent Admin Dashboard</h1>
+<SystemStatusCard />    // NEW: Phone system health
+<CallLogsDashboard />   // Existing: Primary admin view
+<CostDashboard />       // Existing: Cost monitoring
+<DocumentList />        // Existing: Knowledge base
+<IngestionForm />       // Existing: Upload docs
+```
+
+**Solution:** Admin-only dashboard. ChatInterface moved to `/test/demo` for internal testing.
 
 ---
 
-## 🎯 Project Goal
+## 🛠️ IMPLEMENTATION PLAN FOR CODING AGENT
 
-Build a production-ready AI voice agent for MENA customer support that receives phone calls, answers from a knowledge base, supports English/Arabic, and scales to 1000+ concurrent users.
+### Phase 5.6: UI Refactoring (Estimated: 2-3 hours)
+
+**Objective:** Restructure UI to match "Pure Phone Agent" vision
+
+#### Step 1: Create System Status Card (30 minutes)
+
+**File to Create:** `components/system-status-card.tsx`
+
+**Requirements:**
+- Show phone number prominently: **+1 (510) 370 5981**
+- Display system status: 🟢 Operational / 🔴 Down
+- Show key metrics:
+  - Calls today (from vapi_call_logs)
+  - Avg response latency (from call_logs.turn_latency_avg)
+  - Success rate % (completed calls / total calls)
+  - Uptime (99.9% target)
+- Use Card component from shadcn/ui
+- Include refresh button
+- Color code: Green for healthy, yellow for warning, red for critical
+
+**Example Implementation:**
+```tsx
+// components/system-status-card.tsx
+"use client";
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Phone, Activity, Clock, CheckCircle } from "lucide-react";
+import { useEffect, useState } from "react";
+
+interface SystemStats {
+  status: 'operational' | 'degraded' | 'down';
+  callsToday: number;
+  avgLatency: number;
+  successRate: number;
+}
+
+export function SystemStatusCard() {
+  const [stats, setStats] = useState<SystemStats | null>(null);
+  
+  // Fetch stats from API
+  useEffect(() => {
+    // TODO: Implement API call to /api/system-status
+  }, []);
+
+  return (
+    <Card className="mb-6">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Phone className="w-5 h-5" />
+          Phone Agent Status
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          {/* Phone Number */}
+          <div className="text-center p-4 bg-blue-50 rounded-lg">
+            <p className="text-sm text-gray-600">Customer Support Line</p>
+            <p className="text-2xl font-bold text-blue-600">
+              +1 (510) 370 5981
+            </p>
+          </div>
+          
+          {/* Metrics Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <MetricCard
+              icon={<Activity />}
+              label="Status"
+              value={<Badge className="bg-green-500">Operational</Badge>}
+            />
+            <MetricCard
+              icon={<Phone />}
+              label="Calls Today"
+              value={stats?.callsToday || 0}
+            />
+            <MetricCard
+              icon={<Clock />}
+              label="Avg Latency"
+              value={`${stats?.avgLatency || 0}ms`}
+            />
+            <MetricCard
+              icon={<CheckCircle />}
+              label="Success Rate"
+              value={`${stats?.successRate || 0}%`}
+            />
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+```
+
+#### Step 2: Update Landing Page (15 minutes)
+
+**File to Modify:** `app/page.tsx`
+
+**Changes:**
+1. Remove `<ChatInterface />` import and component
+2. Add `<SystemStatusCard />` import
+3. Add page heading
+4. Reorder components
+
+**New Structure:**
+```tsx
+// app/page.tsx
+import { SystemStatusCard } from "@/components/system-status-card"
+import { CallLogsDashboard } from "@/components/call-logs-dashboard"
+import { CostDashboard } from "@/components/cost-dashboard"
+import { DocumentList } from "@/components/document-list"
+import { IngestionForm } from "@/components/ingestion-form"
+// Remove: import { ChatInterface } from "@/components/chat-interface"
+
+export default function Page() {
+  return (
+    <SidebarProvider>
+      <AppSidebar variant="inset" />
+      <SidebarInset>
+        <div className="flex flex-1 flex-col items-center p-4 overflow-y-auto">
+          <div className="w-full max-w-7xl space-y-6">
+            <h1 className="text-3xl font-bold">Phone Agent Admin Dashboard</h1>
+            <SystemStatusCard />
+            <CallLogsDashboard />
+            <CostDashboard />
+            <DocumentList />
+            <IngestionForm />
+          </div>
+        </div>
+      </SidebarInset>
+    </SidebarProvider>
+  );
+}
+```
+
+#### Step 3: Create Test Route (30 minutes)
+
+**Files to Create:**
+1. `app/test/page.tsx` - Internal testing page
+2. `app/test/layout.tsx` - Simple layout for test pages
+
+**Purpose:** Give developers a place to test ChatInterface without confusing it with production
+
+**Implementation:**
+```tsx
+// app/test/page.tsx
+import { ChatInterface } from "@/components/chat-interface";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { AlertCircle } from "lucide-react";
+
+export default function TestPage() {
+  return (
+    <div className="container mx-auto p-8">
+      <Card className="mb-6 border-yellow-500 bg-yellow-50">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-yellow-800">
+            <AlertCircle className="w-5 h-5" />
+            Internal Testing Only
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-yellow-800">
+            This interface is for developer testing only. Customers use the phone system at{" "}
+            <strong>+1 (510) 370 5981</strong>.
+          </p>
+        </CardContent>
+      </Card>
+      <ChatInterface />
+    </div>
+  );
+}
+```
+
+```tsx
+// app/test/layout.tsx
+export default function TestLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {children}
+    </div>
+  );
+}
+```
+
+#### Step 4: Create System Status API (45 minutes)
+
+**File to Create:** `app/api/system-status/route.ts`
+
+**Purpose:** Provide real-time stats for SystemStatusCard
+
+**Implementation:**
+```typescript
+// app/api/system-status/route.ts
+import { NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase";
+
+export async function GET() {
+  try {
+    const supabase = createClient();
+    
+    // Get today's date
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    // Fetch today's calls
+    const { data: calls, error } = await supabase
+      .from("vapi_call_logs")
+      .select("duration_seconds, status, turn_latency_avg")
+      .gte("started_at", today.toISOString());
+    
+    if (error) throw error;
+    
+    // Calculate metrics
+    const callsToday = calls?.length || 0;
+    const successfulCalls = calls?.filter(c => c.status === "completed").length || 0;
+    const successRate = callsToday > 0 ? (successfulCalls / callsToday) * 100 : 0;
+    const avgLatency = callsToday > 0
+      ? calls.reduce((sum, c) => sum + (c.turn_latency_avg || 0), 0) / callsToday
+      : 0;
+    
+    // Determine status
+    const status =
+      successRate < 90 ? "degraded" :
+      avgLatency > 500 ? "degraded" :
+      "operational";
+    
+    return NextResponse.json({
+      status,
+      callsToday,
+      avgLatency: Math.round(avgLatency),
+      successRate: Math.round(successRate),
+      phoneNumber: "+1 (510) 370 5981",
+      lastChecked: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error("System status error:", error);
+    return NextResponse.json(
+      {
+        status: "down",
+        error: "Failed to fetch system status"
+      },
+      { status: 500 }
+    );
+  }
+}
+```
+
+#### Step 5: Update Documentation (30 minutes)
+
+**Files to Update:**
+1. `PROJECT_HANDOVER.md` - Update Quick Start section
+2. `README.md` - Clarify this is phone agent, not web chat
+
+**Changes to Quick Start:**
+```markdown
+## 📋 Quick Start for New Agent
+
+**Current Status:** Phase 5.6 (UI Refactoring) complete. Ready for Phase 6 (Human Handoff).
+
+**What Works:**
+- ✅ Live phone system: +1 (510) 370 5981
+- ✅ Admin dashboard for monitoring
+- ✅ Call logs and cost tracking
+- ✅ Knowledge base management
+- ✅ Internal testing at /test
+
+**Important:** This is a PHONE AGENT, not a web chatbot. Customers call the phone number, they do NOT visit the website. The web interface is for admins only.
+```
+
+### Success Criteria
+
+After completing Phase 5.6:
+- [ ] Landing page (/) shows only admin tools
+- [ ] SystemStatusCard displays phone number and metrics
+- [ ] ChatInterface accessible at /test with warning banner
+- [ ] No customer-facing UI elements on landing page
+- [ ] Documentation updated to reflect phone agent vision
+- [ ] /api/system-status endpoint returns real-time metrics
+
+### Testing Checklist
+
+1. **Visual Inspection:**
+   - [ ] Open http://localhost:3000
+   - [ ] Confirm no chat interface visible
+   - [ ] Confirm system status card shows phone number
+   - [ ] Confirm all admin tools present
+
+2. **Navigation:**
+   - [ ] Open http://localhost:3000/test
+   - [ ] Confirm chat interface loads with warning
+   - [ ] Test voice recording (should still work)
+
+3. **API Testing:**
+   - [ ] Test /api/system-status
+   - [ ] Verify metrics are calculated correctly
+   - [ ] Check status determination logic
+
+4. **Documentation Review:**
+   - [ ] Read updated PROJECT_HANDOVER.md
+   - [ ] Confirm vision is clear
+   - [ ] Verify no references to "web chatbot"
+
+---
+
+## 📋 Quick Start for New Agent (UPDATED)
+
+**Current Status:** ✅ Phase 5.6 (UI Refactoring) COMPLETE! Ready for Phase 6.
+
+**What Works:**
+- ✅ **Phone System:** +1 (510) 370 5981 receives calls (VAPI.ai)
+- ✅ **AI Engine:** RAG with Gemini 2.5 Flash + pgvector
+- ✅ **Voice Processing:** Google Cloud STT/TTS (English/Arabic)
+- ✅ **IVR:** Language selection (1=English, 2=Arabic)
+- ✅ **Performance:** <200ms response latency
+- ✅ **Admin Dashboard:** System status card, call logs, cost monitoring, document management
+- ✅ **Admin-Only UI:** Landing page restructured, ChatInterface moved to /test and /test/demo
+- ✅ **System Status API:** Real-time phone system health metrics
+
+**What Needs Attention:**
+- 🔜 **Phase 6:** Human Handoff System (NEXT - see ROADMAP.md Phase 6)
+- ⏳ **Phase 5.5:** Fix VAPI webhook configuration (optional - call logs showing no data)
+
+**For Internal Testing Only:**
+- ✅ Web chat interface at `/test` and `/test/demo` (developers only)
+- ✅ Clear warning banner that this is internal testing
+- ✅ Voice recording for prototyping
+
+---
+
+## 🎯 Project Goal (CLARIFIED)
+
+**Build a production-ready AI phone agent for MENA customer support that receives phone calls, answers from a knowledge base, and provides an admin dashboard for monitoring.**
+
+### Product Clarification (November 11, 2025)
+
+**This is a PHONE-BASED system:**
+- ✅ Customers call **+1 (510) 370 5981**
+- ✅ AI answers and provides support
+- ✅ Admins use web dashboard to monitor and manage
+- ❌ Customers do NOT visit a website or use a chat interface
+
+**Key Distinction:**
+- **Phone Agent** = Customers call, admins monitor (← THIS PROJECT)
+- **Web Chatbot** = Customers visit website, interact via browser (← NOT this project)
+
+The web chat interface built in Phases 1-4 was a **prototype** to develop the AI engine. It's now used for internal testing only at `/test`.
 
 ---
 
@@ -463,20 +857,22 @@ Begin Conversation
 
 ---
 
-## 📊 Phase Completion
+## 📊 Phase Completion (UPDATED)
 
 | Phase | Status | Notes |
 |-------|--------|-------|
-| 1: Core RAG | ✅ | Gemini + basic RAG |
+| 1: Core RAG | ✅ | Gemini + basic RAG (prototype) |
 | 2: Knowledge Base | ✅ | Supabase + pgvector |
-| 3: Voice | ✅ | STT/TTS working |
-| 4: Arabic | ✅ | Bilingual + RTL |
-| 5: Telephony | ✅ | Live phone system |
-| 5.5: Call Logs | ✅ | Infrastructure complete, tested with debug endpoint |
-| 6: Multi-User | 🔜 | Next: DB sessions + auth |
-| 7: Handoff | 🔜 | Human escalation |
-| 8: Tool Use | 🔜 | Function calling |
-| 9: Hardening | 🔜 | Production ready |
+| 3: Voice | ✅ | STT/TTS working (prototype) |
+| 4: Arabic | ✅ | Bilingual + RTL (prototype) |
+| 5: Telephony | ✅ | Live phone system **← ACTUAL PRODUCT STARTS HERE** |
+| 5.5: Call Logs | ✅ | Infrastructure complete, needs VAPI config |
+| **5.6: UI Refactor** | ✅ | **COMPLETE: Admin-only dashboard** |
+| **6: Human Handoff** | [-] | Core logic implemented, integration pending |
+| 7: CRM Integration | 🔜 | Tool use for customer data |
+| 8: Production | 🔜 | Hardening, monitoring, security |
+
+**Note:** Phases 1-4 built prototypes to develop the AI engine. Phase 5 deployed the actual product (phone system). Phase 5.6 completed UI refactoring. Phase 6 (Human Handoff) is next.
 
 ---
 
@@ -557,43 +953,86 @@ Begin Conversation
 
 ---
 
-## 🔗 Phase 6 Overview (Next Step)
+## 🔗 Phase 6 Overview (Next Step - CORRECTED)
 
-**Goal:** Multi-user sessions with persistent history
+### Why the Change?
+
+**Previous (Incorrect) Phase 6:** Multi-user web sessions
+- Assumed customers use website with accounts
+- Focused on session persistence for web users
+- Not aligned with phone agent vision
+
+**Corrected Phase 6:** Human Handoff System
+- Focused on phone call escalation to human agents
+- Critical for customer satisfaction (AI can't handle everything)
+- Aligned with phone agent product vision
+
+### Phase 6: Human Handoff System
+
+**Goal:** Allow AI to escalate complex calls to human agents
 
 **Key Features:**
-- Phone number authentication
-- Database session storage
-- Conversation history retrieval
-- Per-user analytics
+- Confidence scoring on AI responses
+- Automatic escalation triggers
+- Call transfer to human agent queue
+- Agent notification system (SMS/Slack)
+- Context preservation (full conversation history)
+- Agent takeover UI in web dashboard
+
+**Escalation Triggers:**
+- Confidence score < 0.6 (AI isn't confident)
+- User says "talk to a human" or "speak to manager"
+- Multiple "I don't know" responses (3+ in a row)
+- Profanity or escalation keywords detected
+- Call duration > 10 minutes (likely complex issue)
 
 **Database Schema:**
 ```sql
-CREATE TABLE users (
+CREATE TABLE agent_users (
   id UUID PRIMARY KEY,
-  phone_number VARCHAR(20) UNIQUE,
-  preferred_language VARCHAR(10)
-);
-
-CREATE TABLE chat_sessions (
-  id UUID PRIMARY KEY,
-  user_id UUID REFERENCES users(id),
-  started_at TIMESTAMP,
-  ended_at TIMESTAMP,
-  language VARCHAR(10)
-);
-
-CREATE TABLE chat_messages (
-  id UUID PRIMARY KEY,
-  session_id UUID REFERENCES chat_sessions(id),
-  role VARCHAR(10), -- 'user' or 'assistant'
-  content TEXT,
+  name VARCHAR(100),
+  email VARCHAR(100),
+  phone_number VARCHAR(20),
+  status VARCHAR(20), -- 'available', 'busy', 'offline'
   created_at TIMESTAMP
+);
+
+CREATE TABLE call_escalations (
+  id UUID PRIMARY KEY,
+  call_id VARCHAR(100) REFERENCES vapi_call_logs(call_id),
+  reason VARCHAR(200),
+  confidence_score FLOAT,
+  escalated_at TIMESTAMP,
+  agent_id UUID REFERENCES agent_users(id),
+  resolved_at TIMESTAMP,
+  resolution_notes TEXT
 );
 ```
 
-**Timeline:** 4-5 weeks  
-**See:** [`ROADMAP.md`](ROADMAP.md) for full Phase 6-9 details
+**Implementation:**
+- [`lib/confidence-scorer.ts`](lib/confidence-scorer.ts) - Score AI responses (0-1)
+- [`lib/escalation-manager.ts`](lib/escalation-manager.ts) - Trigger logic & call transfer
+- [`app/api/escalate/route.ts`](app/api/escalate/route.ts) - Escalation API
+- [`components/agent-queue-dashboard.tsx`](components/agent-queue-dashboard.tsx) - Human agent UI
+- [`lib/notification-service.ts`](lib/notification-service.ts) - SMS/Slack alerts
+
+**Deliverables:**
+- [x] Confidence scoring integrated into webhook
+- [x] Agent queue management system (Core components created)
+- [x] Call transfer mechanism (VAPI API) (Core logic created)
+- [x] Agent dashboard for takeover (Component added to dashboard)
+- [x] Notification system (SMS/email/Slack) (Mock service created)
+- [ ] Post-call notes capability
+- [ ] Analytics: escalation rate, resolution time
+
+**Success Metrics:**
+- 95%+ escalation accuracy
+- <30 seconds average handoff time
+- 100% context transfer success
+- Agent satisfaction >4/5
+
+**Timeline:** 2-3 weeks
+**See:** [`ROADMAP.md`](ROADMAP.md) for full Phase 6-8 details
 
 ---
 
