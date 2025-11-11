@@ -87,6 +87,9 @@ export async function POST(req: Request) {
       return handleUserTranscription(body, requestId, startTime);
     } else if (body.type === "call.ended") {
       return handleCallEnded(body, requestId, startTime);
+    } else if (body.type === "end-of-call-report") {
+      // Forward to call-report endpoint for database storage
+      return handleEndOfCallReport(body, requestId, startTime);
     } else {
       console.log(`  ⚠️ Unknown message type: ${body.type}`);
       return NextResponse.json({ status: "unknown_type" });
@@ -285,4 +288,62 @@ async function handleCallEnded(
   console.log(`  ✅ Call cleanup completed in ${duration}ms`);
   
   return NextResponse.json({ status: "ok", timestamp: Date.now() });
+}
+
+/**
+ * Handle end-of-call-report event
+ * Forwards to the call-report endpoint for database storage
+ */
+async function handleEndOfCallReport(
+  body: VAPIMessage,
+  requestId: string,
+  startTime: number
+): Promise<NextResponse> {
+  console.log(`  Action: End-of-Call Report`);
+  console.log(`  Forwarding to call-report endpoint for storage...`);
+  
+  try {
+    // Forward the entire payload to our call-report endpoint
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    const response = await fetch(`${baseUrl}/api/vapi-call-report`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${process.env.VAPI_WEBHOOK_TOKEN || "vapi-test-token-zoid"}`,
+      },
+      body: JSON.stringify(body),
+    });
+    
+    if (!response.ok) {
+      console.error(`  ❌ Failed to forward to call-report: ${response.status}`);
+      return NextResponse.json(
+        { error: "Failed to store call report" },
+        { status: 500 }
+      );
+    }
+    
+    const result = await response.json();
+    const duration = Date.now() - startTime;
+    console.log(`  ✅ Call report stored successfully in ${duration}ms`);
+    
+    return NextResponse.json({
+      status: "ok",
+      forwarded: true,
+      result,
+      timestamp: Date.now(),
+    });
+    
+  } catch (error) {
+    const duration = Date.now() - startTime;
+    console.error(`  ❌ Error forwarding call report (${duration}ms)`);
+    console.error(`  Error: ${error instanceof Error ? error.message : String(error)}`);
+    
+    return NextResponse.json(
+      {
+        error: "Failed to forward call report",
+        details: error instanceof Error ? error.message : String(error),
+      },
+      { status: 500 }
+    );
+  }
 }

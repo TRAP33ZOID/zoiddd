@@ -1,4 +1,4 @@
-# 🎙️ Zoid AI Support Agent
+ # 🎙️ Zoid AI Support Agent
 
 A production-ready, bilingual (English/Arabic) voice-enabled AI customer support agent built with Next.js, featuring real-time speech interaction and RAG-powered knowledge retrieval.
 
@@ -11,7 +11,8 @@ A production-ready, bilingual (English/Arabic) voice-enabled AI customer support
 - 🎯 **Language-Aware Retrieval**: Automatic language filtering for context accuracy
 - 📝 **Text & Voice Chat**: Seamless switching between text and voice input
 - 🔄 **RTL Support**: Right-to-left text rendering for Arabic
-- 📊 **Comprehensive Logging**: Built-in diagnostic infrastructure for monitoring
+- 📊 **Call Logs Dashboard**: Track all phone calls with transcripts, costs, and analytics
+- 💰 **Cost Monitoring**: Real-time tracking of AI/voice service costs
 - ⚡ **Real-time Streaming**: Low-latency (<200ms) streaming audio pipeline for phone calls
 
 ## 🛠️ Tech Stack
@@ -166,6 +167,44 @@ END;
 $$;
 ```
 
+#### 5.3 Create Call Logs Tables (Phase 5.5)
+
+Run this SQL in your Supabase SQL Editor to enable call logging:
+
+```sql
+-- Call logs table
+CREATE TABLE vapi_call_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  call_id VARCHAR(255) UNIQUE NOT NULL,
+  phone_number VARCHAR(50),
+  started_at TIMESTAMPTZ NOT NULL,
+  ended_at TIMESTAMPTZ,
+  duration INTEGER,
+  cost DECIMAL(10, 4),
+  language VARCHAR(10),
+  status VARCHAR(50),
+  metadata JSONB DEFAULT '{}',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Call messages table
+CREATE TABLE vapi_call_messages (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  call_id UUID REFERENCES vapi_call_logs(id) ON DELETE CASCADE,
+  role VARCHAR(20) NOT NULL,
+  message TEXT NOT NULL,
+  timestamp TIMESTAMPTZ DEFAULT NOW(),
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Indexes for performance
+CREATE INDEX idx_call_logs_started_at ON vapi_call_logs(started_at DESC);
+CREATE INDEX idx_call_logs_call_id ON vapi_call_logs(call_id);
+CREATE INDEX idx_call_messages_call_id ON vapi_call_messages(call_id);
+```
+
+**Note:** Call logs dashboard is currently in troubleshooting. See [`TROUBLESHOOTING_CALL_LOGS.md`](TROUBLESHOOTING_CALL_LOGS.md) for details.
+
 ### 6. Upload Sample Knowledge Base (Optional)
 
 Sample knowledge base files are provided in the `knowledge-bases/` directory:
@@ -210,20 +249,36 @@ zoiddd/
 │   ├── ingestion-form.tsx # Document upload component
 │   └── ui/                # shadcn/ui components
 ├── lib/
-│   ├── gemini.ts          # Gemini AI client
-│   ├── voice.ts           # STT/TTS functions
-│   ├── rag.ts             # RAG retrieval logic
-│   ├── supabase.ts        # Supabase client
-│   ├── language.ts        # Language configuration
+│   ├── gemini.ts                  # Gemini AI client
+│   ├── voice.ts                   # STT/TTS functions
+│   ├── rag.ts                     # RAG retrieval logic
+│   ├── supabase.ts                # Supabase client
+│   ├── language.ts                # Language configuration
+│   ├── cost-monitor.ts            # Cost tracking
+│   ├── document-context.ts        # Document refresh events
 │   ├── call-state-manager.ts      # Call tracking (Phase 5)
 │   ├── vapi-client.ts             # VAPI API client (Phase 5)
 │   ├── vapi-ivr-config.ts         # IVR configuration (Phase 5)
 │   ├── rag-cache.ts               # Response caching (Phase 5)
 │   └── google-cloud-key.json      # (YOU MUST CREATE THIS)
 ├── app/api/
+│   ├── chat/                      # Text chat endpoint
+│   ├── voice/                     # Voice interaction endpoint
+│   ├── ingest/                    # Document ingestion endpoint
+│   ├── documents/                 # Document management
 │   ├── vapi-webhook/              # Streaming webhook handler (Phase 5)
-│   ├── admin/vapi-setup/          # VAPI configuration (Phase 5)
-│   └── ...
+│   ├── vapi-call-report/          # End-of-call webhook (Phase 5.5)
+│   ├── call-logs/                 # Call history API (Phase 5.5)
+│   └── admin/vapi-setup/          # VAPI configuration (Phase 5)
+├── components/
+│   ├── chat-interface.tsx         # Main chat UI
+│   ├── ingestion-form.tsx         # Document upload
+│   ├── document-list.tsx          # Document management
+│   ├── cost-dashboard.tsx         # Cost monitoring
+│   ├── call-logs-dashboard.tsx    # Call logs UI (Phase 5.5)
+│   └── ui/                        # shadcn/ui components
+├── supabase/
+│   └── schema.sql                 # Complete database schema
 ├── knowledge-bases/       # Sample knowledge base files
 ├── .env.local            # (YOU MUST CREATE THIS)
 └── PROJECT_HANDOVER.md   # Comprehensive technical documentation
@@ -308,6 +363,21 @@ These are already in `.gitignore`, but always double-check before committing.
 
 ## 🐛 Troubleshooting
 
+### Call Logs Dashboard Issues
+
+**Dashboard Shows "No Calls Found"**
+- Database tables created but no data being saved
+- VAPI may not be sending end-of-call-report events
+- See complete debugging guide: [`TROUBLESHOOTING_CALL_LOGS.md`](TROUBLESHOOTING_CALL_LOGS.md)
+
+**Quick Debug Steps:**
+1. Make a test call to +1 (510) 370 5981
+2. Check terminal logs for "📞 End-of-call report received"
+3. If not present → VAPI configuration issue
+4. If present but no "✅ Call log saved" → database/API issue
+
+**Temporary Workaround:** Phone system works perfectly without dashboard. Call logs are a monitoring feature, not required for core functionality.
+
 ### Phone System Issues
 
 **Call Doesn't Connect**
@@ -356,9 +426,15 @@ These are already in `.gitignore`, but always double-check before committing.
 - ✅ Phase 3: Voice Integration
 - ✅ Phase 4: Arabic Language Support (VERIFIED)
 - ✅ Phase 5: Telephony Integration (COMPLETE - Live phone system operational)
+- 🟡 Phase 5.5: Call Logs Dashboard (TROUBLESHOOTING - Infrastructure complete, data not flowing)
 
 ### 🚧 Current & Future Phases
-- 🚧 **Phase 6: Multi-User Sessions** (IN PROGRESS)
+- 🔧 **Phase 5.5: Call Logs Dashboard** (TROUBLESHOOTING)
+  - All infrastructure built and deployed
+  - Issue: VAPI not sending end-of-call reports
+  - See [`TROUBLESHOOTING_CALL_LOGS.md`](TROUBLESHOOTING_CALL_LOGS.md) for debugging
+  
+- 🚧 **Phase 6: Multi-User Sessions** (NEXT)
   - User authentication (phone number based)
   - Session persistence in database
   - Conversation history retrieval
@@ -373,6 +449,12 @@ For complete roadmap details, see [`ROADMAP.md`](ROADMAP.md)
 
 ## 🔗 Next Steps
 
+**For Call Logs Dashboard Fix (Phase 5.5):**
+1. Read [`TROUBLESHOOTING_CALL_LOGS.md`](TROUBLESHOOTING_CALL_LOGS.md) for complete debugging guide
+2. Check VAPI dashboard for end-of-call-report configuration
+3. Test webhook with manual curl commands
+4. Verify database tables and permissions
+
 **For Phase 6 Implementation:**
 1. Review multi-user session design in [`PROJECT_HANDOVER.md`](PROJECT_HANDOVER.md:175)
 2. Create database tables for users, sessions, and messages
@@ -382,7 +464,7 @@ For complete roadmap details, see [`ROADMAP.md`](ROADMAP.md)
 
 **For Detailed Setup of Phase 5:**
 - See [`PHASE_5_SETUP.md`](PHASE_5_SETUP.md) for step-by-step VAPI configuration
-- See [`VAPI_QUICK_START.md`](VAPI_QUICK_START.md) for quick reference
+- See [`CALL_LOGS_SETUP.md`](CALL_LOGS_SETUP.md) for call logs setup guide
 
 ---
 

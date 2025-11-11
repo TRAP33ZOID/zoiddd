@@ -3,6 +3,7 @@ import { ChatInterface } from "@/components/chat-interface"
 import { IngestionForm } from "@/components/ingestion-form"
 import { DocumentList } from "@/components/document-list"
 import { CostDashboard } from "@/components/cost-dashboard"
+import { CallLogsDashboard } from "@/components/call-logs-dashboard"
 import {
   SidebarInset,
   SidebarProvider,
@@ -24,6 +25,7 @@ export default function Page() {
           <IngestionForm />
           <DocumentList />
           <CostDashboard />
+          <CallLogsDashboard />
           <ChatInterface />
         </div>
       </SidebarInset>

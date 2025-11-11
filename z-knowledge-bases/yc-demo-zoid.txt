@@ -1,0 +1,209 @@
+# Zoid AI Voice Agent - Company Knowledge Base
+
+## About Zoid
+
+Zoid is an AI-powered voice agent platform that helps businesses provide 24/7 customer support through phone calls. We combine real-time speech recognition, advanced RAG (Retrieval-Augmented Generation), and natural language AI to create voice agents that actually understand context and answer accurately.
+
+**Founded:** 2024
+**Focus:** MENA region (Middle East & North Africa)
+**Languages:** English and Modern Standard Arabic
+**Tech Stack:** Built on Gemini 2.5 Flash, VAPI.ai telephony, Supabase vector database
+
+## The Problem We Solve
+
+Businesses in the MENA region struggle with:
+- Expensive call centers operating 24/7
+- Language barriers (English + Arabic support required)
+- Inconsistent customer service quality
+- Slow response times and high wait times
+- Difficulty scaling support during peak hours
+
+Traditional chatbots can't handle voice calls. IVR systems are rigid and frustrating. Hiring bilingual support teams is costly. We solve all three.
+
+## Our Solution
+
+Zoid is a complete voice AI platform that:
+1. **Answers phone calls** in real-time with natural conversation
+2. **Retrieves information** from your knowledge base using RAG
+3. **Speaks naturally** in English or Arabic
+4. **Scales instantly** - handles 1 call or 1000 calls
+5. **Tracks everything** - full call logs, transcripts, and analytics
+
+### Technical Capabilities
+- **Response Time:** <200ms latency (feels like talking to a human)
+- **Accuracy:** Context-aware responses using vector search
+- **Bilingual:** Full support for English and Modern Standard Arabic
+- **Reliable:** 99%+ uptime, automatic failover
+- **Integrated:** Webhook-based, easy to plug into existing systems
+
+## How It Works
+
+1. **Customer calls** your phone number
+2. **Zoid answers** and asks how it can help
+3. **AI listens** and transcribes speech to text in real-time
+4. **RAG retrieves** relevant information from your knowledge base
+5. **AI generates** a natural, context-aware response
+6. **Voice synthesis** converts response to speech
+7. **Customer hears** the answer in <500ms
+
+Everything happens in real-time. No awkward pauses. No robotic responses.
+
+## Current Features
+
+### Voice Processing
+- Real-time speech-to-text (Google Cloud Speech API)
+- Natural text-to-speech with emotion
+- Background noise filtering
+- Multiple accent support
+
+### Intelligence Layer
+- RAG-powered context retrieval
+- Conversation memory (multi-turn awareness)
+- Language detection and switching
+- Confidence scoring for responses
+
+### Business Features
+- Call logs with full transcripts
+- Audio recording playback
+- Performance analytics dashboard
+- Cost tracking per call
+- Custom knowledge base management
+
+### Developer Features
+- Webhook integration
+- REST API access
+- Custom system prompts
+- Extensible tool system
+- Docker deployment ready
+
+## Use Cases
+
+**Customer Support**
+- Answer common questions 24/7
+- Reduce support ticket volume
+- Free up human agents for complex issues
+
+**Lead Qualification**
+- Pre-screen potential customers
+- Collect initial information
+- Route to appropriate sales rep
+
+**Appointment Booking**
+- Check availability
+- Schedule appointments
+- Send confirmations
+
+**Order Status**
+- Look up orders
+- Provide tracking updates
+- Handle return requests
+
+**Information Hotlines**
+- Healthcare information
+- Government services
+- Educational resources
+
+## Pricing (Beta)
+
+Currently in private beta - contact for pricing.
+
+General structure:
+- Per-minute usage pricing
+- Unlimited knowledge base storage
+- Full analytics included
+- API access included
+- Custom integrations available
+
+## Technical Details
+
+### AI Models
+- **LLM:** Gemini 2.5 Flash (fast, cost-effective)
+- **Embeddings:** text-embedding-004 (768 dimensions)
+- **STT:** Google Cloud Speech-to-Text
+- **TTS:** Google Cloud Text-to-Speech
+
+### Infrastructure
+- **Telephony:** VAPI.ai platform
+- **Database:** Supabase (PostgreSQL + pgvector)
+- **Hosting:** Cloud-based, globally distributed
+- **Security:** Bearer token auth, encrypted data at rest
+
+### Performance
+- Voice latency: <200ms average
+- RAG retrieval: <100ms
+- Supports 100+ concurrent calls
+- 99.9% uptime SLA
+
+## Why MENA Focus?
+
+The MENA region has unique challenges:
+- Bilingual requirements (English + Arabic)
+- High smartphone adoption but low chatbot trust
+- Growing e-commerce but limited support infrastructure
+- Cultural preference for voice over text
+
+We're building specifically for these needs with:
+- Native Arabic language support (not just translation)
+- Regional voice options
+- Cultural context awareness
+- Local deployment options (data residency)
+
+## Roadmap
+
+**Current (Phase 5.5):** Call logs dashboard with analytics
+**Next (Phase 6):** User profiles and conversation history
+**Future:**
+- Additional Arabic dialects (Egyptian, Gulf, Levantine)
+- Tool use / function calling (CRM integration, booking systems)
+- Human handoff for complex queries
+- Multi-channel support (web, WhatsApp, SMS)
+
+## Getting Started
+
+**For Businesses:**
+1. Contact us for a demo
+2. We'll set up a test number for you
+3. Upload your knowledge base
+4. Test with real calls
+5. Go live when ready
+
+**For Developers:**
+1. Check our API documentation
+2. Set up webhook endpoints
+3. Configure your assistant
+4. Integrate with your systems
+
+## Demo Number
+
+Call **+1 (510) 370 5981** to experience Zoid in action.
+
+You can ask questions like:
+- "What is Zoid?"
+- "What languages do you support?"
+- "How does the pricing work?"
+- "Can you integrate with my CRM?"
+
+## Support
+
+- **Sales:** Call +1 (510) 370 5981
+- **Technical Support:** Available during setup
+- **Documentation:** Full API docs and integration guides
+- **Response Time:** <24 hours for all inquiries
+
+## Technology Partners
+
+- Google Cloud (AI/ML infrastructure)
+- VAPI.ai (telephony platform)
+- Supabase (database & vector storage)
+- Vercel (hosting & deployment)
+
+## Company Info
+
+**Team:** Small but experienced team of ML engineers and product builders
+**Backed by:** Independent (open to investment)
+**Location:** Remote-first, MENA-focused
+**Status:** Private beta, actively onboarding customers
+
+---
+
+For more information or to schedule a demo, call our demo line at +1 (510) 370 5981 or visit our website.
