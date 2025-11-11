@@ -203,7 +203,7 @@ CREATE INDEX idx_call_logs_call_id ON vapi_call_logs(call_id);
 CREATE INDEX idx_call_messages_call_id ON vapi_call_messages(call_id);
 ```
 
-**Note:** Call logs dashboard is currently in troubleshooting. See [`TROUBLESHOOTING_CALL_LOGS.md`](TROUBLESHOOTING_CALL_LOGS.md) for details.
+**Note:** Call logs dashboard is currently in troubleshooting. See [`PROJECT_HANDOVER.md`](PROJECT_HANDOVER.md:101) (Phase 5.5 section) for debugging steps.
 
 ### 6. Upload Sample Knowledge Base (Optional)
 
@@ -368,7 +368,7 @@ These are already in `.gitignore`, but always double-check before committing.
 **Dashboard Shows "No Calls Found"**
 - Database tables created but no data being saved
 - VAPI may not be sending end-of-call-report events
-- See complete debugging guide: [`TROUBLESHOOTING_CALL_LOGS.md`](TROUBLESHOOTING_CALL_LOGS.md)
+- See complete debugging guide in [`PROJECT_HANDOVER.md`](PROJECT_HANDOVER.md:101) (Phase 5.5 section)
 
 **Quick Debug Steps:**
 1. Make a test call to +1 (510) 370 5981
@@ -426,7 +426,7 @@ These are already in `.gitignore`, but always double-check before committing.
 - ✅ Phase 3: Voice Integration
 - ✅ Phase 4: Arabic Language Support (VERIFIED)
 - ✅ Phase 5: Telephony Integration (COMPLETE - Live phone system operational)
-- 🟡 Phase 5.5: Call Logs Dashboard (TROUBLESHOOTING - Infrastructure complete, data not flowing)
+- 🟡 Phase 5.5: Call Logs Dashboard (TROUBLESHOOTING - Infrastructure complete, data not flowing - see [`PROJECT_HANDOVER.md`](PROJECT_HANDOVER.md:101))
 
 ### 🚧 Current & Future Phases
 - 🔧 **Phase 5.5: Call Logs Dashboard** (TROUBLESHOOTING)
@@ -450,7 +450,7 @@ For complete roadmap details, see [`ROADMAP.md`](ROADMAP.md)
 ## 🔗 Next Steps
 
 **For Call Logs Dashboard Fix (Phase 5.5):**
-1. Read [`TROUBLESHOOTING_CALL_LOGS.md`](TROUBLESHOOTING_CALL_LOGS.md) for complete debugging guide
+1. Read [`PROJECT_HANDOVER.md`](PROJECT_HANDOVER.md:101) (Phase 5.5 section) for complete debugging guide
 2. Check VAPI dashboard for end-of-call-report configuration
 3. Test webhook with manual curl commands
 4. Verify database tables and permissions
@@ -463,8 +463,8 @@ For complete roadmap details, see [`ROADMAP.md`](ROADMAP.md)
 5. Update UI to support user login and history
 
 **For Detailed Setup of Phase 5:**
-- See [`PHASE_5_SETUP.md`](PHASE_5_SETUP.md) for step-by-step VAPI configuration
-- See [`CALL_LOGS_SETUP.md`](CALL_LOGS_SETUP.md) for call logs setup guide
+- See [`PROJECT_HANDOVER.md`](PROJECT_HANDOVER.md:299) for VAPI Configuration Reference
+- See lines 170-204 of this file (README.md) for call logs database setup SQL
 
 ---
 
